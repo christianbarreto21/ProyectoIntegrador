@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editar Perfil</title>
+</head>
+<body>
+    <h1>Editar Perfil de {{ user_form.instance.username }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <h2>Datos de Usuario</h2>
+        {{ user_form.as_p }}
+        
+        <h2>Datos de Usuario Residuos</h2>
+        {{ residuos_form.as_p }}
+        
+        <button type="submit">Guardar cambios</button>
+    </form>
+    <a href="{% url 'ver_perfil' %}">Cancelar</a>
+</body>
+</html>

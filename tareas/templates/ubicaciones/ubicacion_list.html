@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Ubicaciones</title>
+    <style>
+        /* Estilos básicos de la página */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f0f4f8;
+        }
+
+        /* Barra superior */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #2f3e46;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .top-bar .company-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .top-bar .user-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .top-bar .user-options a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .top-bar .user-options a:hover {
+            text-decoration: underline;
+        }
+
+        /* Barra lateral */
+        .side-bar {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 200px;
+            height: calc(100% - 50px);
+            background-color: #354f52;
+            color: white;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .side-bar button {
+            background-color: transparent;
+            color: white;
+            border: none;
+            text-align: left;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .side-bar button:hover {
+            background-color: #52796f;
+        }
+
+        /* Contenedor principal */
+        .main-content {
+            margin-top: 50px;
+            margin-left: 200px;
+            padding: 20px;
+            width: calc(100% - 200px);
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2f3e46;
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            padding: 10px;
+            background-color: #2f3e46;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary:hover {
+            background-color: #52796f;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #e8eff1;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        .btn-secondary {
+            background-color: #354f52;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #52796f;
+        }
+
+        .btn-danger {
+            background-color: #b33939;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background-color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div class="company-name">Nombre de la Empresa</div>
+        <div class="user-options">
+            <a href="{% url 'ver_perfil' %}">Perfil</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <!-- Barra lateral -->
+    <div class="side-bar">
+        <button onclick="location.href='/mapa/'">Ver Mapa</button>
+        <button onclick="location.href='/categoria/'">Categoría</button>
+        <button onclick="location.href='/lis/'">Ver Lugar</button>
+        <button onclick="location.href='/cotizar_domicilio/'">cotizar</button>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="container">
+            <h1>Lista de Ubicaciones</h1>
+            <a href="{% url 'crear_ubicacion' %}" class="btn-primary">Crear nueva ubicación</a>
+            <ul>
+                {% for ubicacion in ubicaciones %}
+                    <li>
+                        <span>{{ ubicacion.nombre }}</span>
+                        <div>
+                            <a href="{% url 'ubicacion_update' ubicacion.pk %}" class="btn-secondary">Editar</a>
+                            <a href="{% url 'ubicacion_delete' ubicacion.pk %}" class="btn-danger">Eliminar</a>
+                        </div>
+                    </li>
+                {% empty %}
+                    <li>No hay ubicaciones disponibles.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

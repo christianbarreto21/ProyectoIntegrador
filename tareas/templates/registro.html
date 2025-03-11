@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro</title>
+    <style>
+        /* Estilos básicos de la página */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #b2d8d8; /* Color de fondo */
+        }
+
+        /* Contenedor del formulario */
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2f3e46;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            padding: 10px;
+            background-color: #2f3e46;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #52796f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Registrar nuevo usuario</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-primary">Registrarse</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de Ubicaciones</title>
+    <style>
+        /* Estilos básicos de la página */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #f0f4f8;
+        }
+
+        /* Barra superior */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 98%;
+            height: 50px;
+            background-color: #2f3e46;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .top-bar .company-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .top-bar .user-options {
+            display: flex;
+            gap: 15px;
+        }
+
+        .top-bar .user-options a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .top-bar .user-options a:hover {
+            text-decoration: underline;
+        }
+
+        /* Barra lateral */
+        .side-bar {
+            position: fixed;
+            top: 50px; /* debajo de la barra superior */
+            left: 0;
+            width: 200px;
+            height: calc(100% - 50px);
+            background-color: #354f52;
+            color: white;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        .side-bar button {
+            background-color: transparent;
+            color: white;
+            border: none;
+            text-align: left;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .side-bar button:hover {
+            background-color: #52796f;
+        }
+
+        /* Contenedor del mapa */
+        .main-content {
+            margin-top: 50px;
+            margin-left: 300px;
+            padding: 20px;
+            width: calc(100% - 200px);
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA6UraIqk2HLx8aXPpHOqv2TF3v5JuGnkY"></script>
+    <script>
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 5,
+                center: {lat: 4.570868, lng: -74.297333}  // Centrado en Colombia
+            });
+
+            var ubicaciones = JSON.parse('{{ ubicaciones_json|escapejs }}');
+            ubicaciones.forEach(function(ubicacion) {
+                var fields = ubicacion.fields;
+                var marker = new google.maps.Marker({
+                    position: {lat: parseFloat(fields.latitud), lng: parseFloat(fields.longitud)},
+                    map: map,
+                    title: fields.nombre
+                });
+                var infowindow = new google.maps.InfoWindow({
+                    content: '<h3>' + fields.nombre + '</h3><p>' + fields.descripcion + '</p>'
+                });
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+            });
+        }
+    </script>
+</head>
+<body onload="initMap()">
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div class="company-name">Ecoresiduos</div>
+        <div class="user-options">
+            <a href="{% url 'ver_perfil' %}">Perfil</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <!-- Barra lateral -->
+    <div class="side-bar">
+        <button onclick="location.href='/mapa/'">Ver Mapa</button>
+        <button onclick="location.href='/buscar/'">Categoría</button>
+        <button onclick="location.href='/lis1/'">Ver Lugar</button>
+        <button onclick="location.href='/cotizar_domicilio/'">cotizar</button>
+    </div>  
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <h1>Mapa de Ubicaciones</h1>
+        <div id="map"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoResiduos</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #176d55; /* Fondo verde limón */
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #0b0d0e;
+            padding: 15px;
+            color: white;
+        }
+
+        .navbar h1 {
+            margin: 0;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #7b7676;
+            border-radius: 5px;
+        }
+
+        .navbar a:hover {
+            background-color: #d64a4a;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de navegación -->
+    <div class="navbar">
+        <h1> EcoResiduos </h1>
+        <div>
+           
+            <a href="{% url 'registro_usuario' %}">Registrar </a>
+            <a href="{% url 'login_usuario' %}">Login</a>
+            
+        </div>
+    </div>  
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <h2>Bienvenido  </h2>
+        <script src="https://js.stripe.com/v3/"></script>
+        
+    </div>
+</body>
+</html> 
