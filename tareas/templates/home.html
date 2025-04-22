@@ -1,69 +1,48 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoResiduos</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #176d55; /* Fondo verde limón */
-        }
+{% extends "base.html" %}
+{% load static %}
 
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #0b0d0e;
-            padding: 15px;
-            color: white;
-        }
+{% block title %}Inicio - Proyecto{% endblock %}
 
-        .navbar h1 {
-            margin: 0;
-        }
+{% block content %}
+<style>
+    .main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 50px;
+    }
+    .text-content {
+        max-width: 600px;
+    }
+    h1 {
+        font-size: 2em;
+        color: #000066;
+    }
+    .text-content p {
+        color: #444;
+    }
+    .btn-services {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 10px 20px;
+        background-color: #0e5846;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .image-container img {
+        width: 600px;
+    }
+</style>
 
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            background-color: #7b7676;
-            border-radius: 5px;
-        }
-
-        .navbar a:hover {
-            background-color: #d64a4a;
-        }
-
-        .container {
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
-</head>
-<body>
-    <!-- Barra de navegación -->
-    <div class="navbar">
-        <h1> EcoResiduos </h1>
-        <div>
-           
-            <a href="{% url 'registro_usuario' %}">Registrar </a>
-            <a href="{% url 'login_usuario' %}">Login</a>
-            
-        </div>
-    </div>  
-
-    <!-- Contenido principal -->
-    <div class="container">
-        <h2>Bienvenido  </h2>
-        <script src="https://js.stripe.com/v3/"></script>
-        
+<section class="main">
+    <div class="text-content">
+        <h1>Bienvenido a <strong>'proyecto'</strong></h1>
+        <p>En nuestra ciudad, la gestión adecuada de los residuos es fundamental para proteger el medio ambiente y garantizar la salud pública. Separar los residuos y desecharlos correctamente ayuda a reducir la contaminación, facilita el reciclaje y disminuye la cantidad de basura que termina en los rellenos sanitarios.</p>
+        <a href="#" class="btn-services">Servicios</a>
     </div>
-</body>
-</html> 
+    <div class="image-container">
+        <img src="{% static 'images/Contenedores-para-el-reciclaje.jpg' %}" class="img-fluid rounded shadow-lg" alt="Contenedores de reciclaje">
+    </div>
+</section>
+{% endblock %}

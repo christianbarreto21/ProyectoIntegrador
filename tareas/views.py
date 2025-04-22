@@ -20,7 +20,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Evento
-from .forms import CotizacionDomicilioForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm, UsuarioForm, UsuarioResiduosForm
+from .forms import CotizacionDomicilioForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
@@ -40,31 +40,40 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from .models import Usuario
+def  home_view(request):
+    return render(request, 'home.html', {})
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.forms import AuthenticationForm
 
 def login_usuario(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('username')  # AuthenticationForm usa 'username' por defecto, aunque sea email
             password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            user = authenticate(email=email, password=password)  # Autenticamos con email
+
             if user is not None:
                 login(request, user)
-                # Redirige a la vista específica según el rol
-                if user.usuario_residuos.rol.nombre == 'gestor de residuos':
-                    return redirect('vista_gestor_residuos')
-                elif user.usuario_residuos.rol.nombre == 'experto_ambiental':
-                    return redirect('vista_experto_ambiental')
-                elif user.usuario_residuos.rol.nombre == 'clienteempresa':
-                    return redirect('vista_clienteempresa')
-                elif user.usuario_residuos.rol.nombre == 'clientenatural':
-                    return redirect('vista_clientenatural')
-                else:
-                    return redirect('home')  # Redirige a home si no hay coincidencia
+
+                # Redirigir según el rol del usuario
+                rol_nombre = user.rol.nombre if user.rol else ''
+                rutas_roles = {
+                    'gestor de residuos': 'vista_gestor_residuos',
+                    'experto_ambiental': 'vista_experto_ambiental',
+                    'clienteempresa': 'vista_clienteempresa',
+                    'clientenatural': 'vista_clientenatural'
+                }
+                return redirect(rutas_roles.get(rol_nombre, 'home'))  # Si no tiene rol, va a 'home'
+
             else:
-                form.add_error(None, 'Nombre de usuario o contraseña incorrectos')
+                form.add_error(None, 'Correo o contraseña incorrectos')
+
     else:
         form = AuthenticationForm()
+
     return render(request, 'registration/login.html', {'form': form})
 
 @login_required
@@ -149,18 +158,16 @@ def create_checkout_session(request):
             })
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=403)
-
-def registro_usuario(request):
+def registrar_usuario(request):
     if request.method == 'POST':
         form = RegistroUsuarioForm(request.POST)
         if form.is_valid():
-            usuario = form.save(commit=False)
-            usuario.email = form.cleaned_data.get('correo')  # Establece el campo email desde correo
-            usuario.save()
-            login(request, usuario)
-            return redirect('home')  # Cambia 'home' por la URL a la que quieras redirigir
+            user = form.save()
+            login(request, user)  # Autentica al usuario después de registrarse
+            return redirect('home')  # Redirige a la página principal (ajústalo según tu proyecto)
     else:
         form = RegistroUsuarioForm()
+    
     return render(request, 'registro.html', {'form': form})
 
 # Crear un nuevo evento

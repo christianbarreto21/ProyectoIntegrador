@@ -15,33 +15,23 @@ class Rol(models.Model):
     def __str__(self):
         return self.nombre
 
-class UsuarioResiduos(models.Model):
-    nombre = models.CharField(max_length=150)
-    identificacion = models.CharField(max_length=20, unique=True)
-    correo = models.EmailField(unique=True)
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE, related_name='usuarios_residuos')
 
-    def __str__(self):
-        return self.nombre
-
+    
+    
 class Usuario(AbstractUser):
-    telefono = models.CharField(max_length=20, blank=True)
-    direccion = models.CharField(max_length=255, blank=True)
 
-    # Relación con UsuarioResiduos
-    usuario_residuos = models.OneToOneField(
-        UsuarioResiduos, 
-        on_delete=models.CASCADE, 
-        null=True, blank=True, 
-        related_name='usuario'
-    )
-
-    # Solución al conflicto de grupos y permisos
-    groups = models.ManyToManyField(Group, related_name="usuario_groups", blank=True)
-    user_permissions = models.ManyToManyField(Permission, related_name="usuario_permissions", blank=True)
-
+    username = None  # Eliminamos el campo username predeterminado
+    nombre = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)  # Usamos el email como identificador único
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    direccion = models.TextField(blank=True, null=True)
+    identificacion=models.TextField(max_length=10)
+    rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True, blank=True)
+    USERNAME_FIELD = 'email'  # Especificamos que el email será el identificador principal
+    REQUIRED_FIELDS = []  # Eliminamos username de los campos requeridos
+    
     def __str__(self):
-        return self.username
+        return self.email
 
 
 class Ubicacion(models.Model):

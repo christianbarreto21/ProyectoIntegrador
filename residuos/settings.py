@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 STRIPE_PUBLIC_KEY = 'pk_test_51QADVeKkfVIicT903JES2P5XySQsS4QTWZLw58WuN3KyNBSkwujXEhGPaVkiN0zSY3Iw5e0ZDpbU2sAjDW11KaNu00sF4ndIeJ'
 STRIPE_SECRET_KEY = 'sk_test_51QADVeKkfVIicT90wMRd5RbqmnjoFTIlHFQDgwMg8sDneohcdHOIuKwBUoAXFeMAm0qDDmkA3shPCt2Q7X2svGYy00f3scZMF6'
@@ -119,8 +120,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # Carpeta "static" dentro del proyecto
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

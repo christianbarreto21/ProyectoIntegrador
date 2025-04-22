@@ -2,18 +2,20 @@
 from turtle import home
 from django import views
 from django.urls import path
-from .views import  agregar_informe_manejo_residuos, agregar_informe_normativas, buscar_por_categoria, cotizar_domicilio, crear_ubicacion,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, payment_view,registro_usuario, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
+
+    
+from .views import  agregar_informe_manejo_residuos, agregar_informe_normativas, buscar_por_categoria, cotizar_domicilio, crear_ubicacion,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, payment_view, registrar_usuario, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
 
 
 urlpatterns = [
-    path('home/', home, name='home'),
+     path('', home_view, name='home'),
     path('logout/', logout_usuario, name='logout'),
     path('login/', login_usuario, name='login_usuario'), 
     path('gestor_residuos/', vista_gestor_residuos, name='vista_gestor_residuos'), 
     path('experto_ambiental/', vista_experto_ambiental, name='vista_experto_ambiental'), 
     path('clienteempresa/', vista_clienteempresa, name='vista_clienteempresa'), 
     path('clientenatural/', vista_clientenatural, name='vista_clientenatural'),
-    path('registro/', registro_usuario, name='registro_usuario'),
+    path('registro/', registrar_usuario, name='registro_usuario'),
     path('payment/', payment_view, name='payment'),
     path('create-checkout-session/', create_checkout_session, name='create_checkout_session'),
     path('eventos/', listar_eventos, name='listar_eventos'),

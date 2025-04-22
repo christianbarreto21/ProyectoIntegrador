@@ -10,8 +10,6 @@ class LoginForm(AuthenticationForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
 
-
-
 class EventoForm(forms.ModelForm):
     class Meta:
         model = Evento
@@ -20,28 +18,22 @@ class EventoForm(forms.ModelForm):
 
 class RegistroUsuarioForm(UserCreationForm):
     usable_password = None
-    nombre = forms.CharField(max_length=150, required=True)
-    identificacion = forms.CharField(max_length=20, required=True)
-    correo = forms.EmailField(required=True)
-    id_rol = forms.ModelChoiceField(queryset=Rol.objects.all(), required=True)
+    nombre = forms.CharField(max_length=100, required=True)
+    email = forms.EmailField(required=True)
+    telefono = forms.CharField(max_length=20, required=False)
+    direccion = forms.CharField(max_length=20, required=False)
+    identificacion = forms.CharField(max_length=10, required=True)
 
     class Meta:
         model = Usuario
-        fields = ['username', 'nombre', 'identificacion', 'correo', 'id_rol', 'telefono', 'direccion', 'password1', 'password2']
+        fields = ['nombre', 'email', 'telefono', 'direccion', 'identificacion', 'password1', 'password2']
 
-
-from django import forms
-from .models import Usuario, UsuarioResiduos
-
-class UsuarioForm(forms.ModelForm):
-    class Meta:
-        model = Usuario
-        fields = ['username', 'email', 'telefono', 'direccion']
-
-class UsuarioResiduosForm(forms.ModelForm):
-    class Meta:
-        model = UsuarioResiduos
-        fields = ['nombre', 'identificacion', 'correo', 'rol']
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.rol, _ = Rol.objects.get_or_create(nombre="clientenatural")  # Asigna el rol automáticamente
+        if commit:
+            user.save()
+        return user
 
 
 class UbicacionForm(forms.ModelForm):
