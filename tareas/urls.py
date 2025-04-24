@@ -4,7 +4,7 @@ from django import views
 from django.urls import path
 
     
-from .views import  agregar_informe_manejo_residuos, agregar_informe_normativas, buscar_por_categoria, cotizar_domicilio, crear_ubicacion,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, payment_view, registrar_usuario, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
+from .views import  agregar_informe_manejo_residuos, agregar_informe_normativas, buscar_por_categoria, cotizar_domicilio, crear_categoria, crear_ubicacion, editar_categoria, eliminar_categoria,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, payment_view, registrar_usuario, resumen_co2, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
 
 
 urlpatterns = [
@@ -32,8 +32,13 @@ urlpatterns = [
    path('lis1/', ubicacion_list1, name='ubicacion_list'),
    path('editar/<int:pk>/', ubicacion_update, name='ubicacion_update'),
     path('eliminar/<int:pk>/', ubicacion_delete, name='ubicacion_delete'),
-
+    path('resumen-co2/', resumen_co2, name='resumen_co2'),
     path('informe_manejo_residuos/nuevo/', agregar_informe_manejo_residuos, name='agregar_informe_manejo_residuos'),
     path('informe_normativas/nuevo/', agregar_informe_normativas, name='agregar_informe_normativas'),
+    path('categorias/', lista_categorias, name='lista_categorias'),
+    path('categorias/nueva/', crear_categoria, name='crear_categoria'),
+    path('categorias/editar/<int:pk>/', editar_categoria, name='editar_categoria'),
+    path('categorias/eliminar/<int:pk>/', 
+         eliminar_categoria, name='eliminar_categoria'),
 
 ]

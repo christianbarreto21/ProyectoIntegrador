@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Resumen CO₂ Evitado{% endblock %}
+
+{% block content %}
+    <h2>CO₂ evitado por gestión de residuos</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>CO₂ evitado (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+            <tr>
+                <td>{{ registro.categoria.nombre }}</td>
+                <td>{{ registro.cantidad_kg }}</td>
+                <td>{{ registro.co2_evitable }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h4>Total CO₂ evitado: {{ total_co2 }} kg</h4>
+{% endblock %}

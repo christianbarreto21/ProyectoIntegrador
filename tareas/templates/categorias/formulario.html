@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ accion }} Categoría</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">{{ accion }}</button>
+    <a href="{% url 'lista_categorias' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

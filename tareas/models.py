@@ -84,3 +84,23 @@ class CotizacionDomicilio(models.Model):
     
     def _str_(self):
         return f'Cotización: {self.peso} kg - ${self.monto}'
+# modelos.py
+from django.db import models
+
+class CategoriaResiduo(models.Model):
+    nombre = models.CharField(max_length=100)
+    factor_co2 = models.FloatField(help_text="kg CO₂e evitado por kg de residuo")
+
+    def __str__(self):
+        return self.nombre
+class RegistroResiduo(models.Model):
+    categoria = models.ForeignKey(CategoriaResiduo, on_delete=models.CASCADE)
+    cantidad_kg = models.FloatField()
+    fecha = models.DateField(auto_now_add=True)
+
+    @property
+    def co2_evitable(self):
+        return round(self.cantidad_kg * self.categoria.factor_co2, 2)  # Devuelve el CO₂ evitado
+
+    def __str__(self):
+        return f"{self.categoria.nombre} - {self.cantidad_kg} kg"

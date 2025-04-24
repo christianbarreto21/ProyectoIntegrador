@@ -59,3 +59,11 @@ class InformeManejoResiduosForm(forms.Form):
 class InformeNormativasForm(forms.Form):
     descripcion = forms.CharField(widget=forms.Textarea, label="Descripción de la Normativa")
     archivo_informe = forms.FileField(label="Archivo de Informe", required=False)
+
+from django import forms
+from .models import CategoriaResiduo
+
+class CategoriaResiduoForm(forms.ModelForm):
+    class Meta:
+        model = CategoriaResiduo
+        fields = ['nombre', 'factor_co2']

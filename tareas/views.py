@@ -11,7 +11,7 @@ from django.contrib.auth import logout
 import stripe
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
-from .models import Ubicacion
+from .models import CategoriaResiduo, Ubicacion
 from django.shortcuts import render
 from .models import Ubicacion, Usuario
 from django.conf import settings
@@ -20,7 +20,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Evento
-from .forms import CotizacionDomicilioForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm
+from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
@@ -348,3 +348,49 @@ def agregar_informe_normativas(request):
         form = InformeNormativasForm()
 
     return render(request, 'informes/agregar_informe.html', {'form': form, 'titulo': 'Informe de Normativas'})
+
+from django.shortcuts import render
+from .models import RegistroResiduo
+
+def resumen_co2(request):
+    registros = RegistroResiduo.objects.select_related('categoria')
+    total_co2 = sum(r.co2_evitable for r in registros)
+    return render(request, 'resumen_co2.html', {
+        'registros': registros,
+        'total_co2': total_co2
+    })
+
+def lista_categorias(request):
+    categorias = CategoriaResiduo.objects.all()
+    return render(request, 'categorias/lista.html', {'categorias': categorias})
+
+# CREAR
+def crear_categoria(request):
+    if request.method == 'POST':
+        form = CategoriaResiduoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_categorias')
+    else:
+        form = CategoriaResiduoForm()
+    return render(request, 'categorias/formulario.html', {'form': form, 'accion': 'Crear'})
+
+# ACTUALIZAR
+def editar_categoria(request, pk):
+    categoria = get_object_or_404(CategoriaResiduo, pk=pk)
+    if request.method == 'POST':
+        form = CategoriaResiduoForm(request.POST, instance=categoria)
+        if form.is_valid():
+            form.save()
+            return redirect('lista_categorias')
+    else:
+        form = CategoriaResiduoForm(instance=categoria)
+    return render(request, 'categorias/formulario.html', {'form': form, 'accion': 'Editar'})
+
+# ELIMINAR
+def eliminar_categoria(request, pk):
+    categoria = get_object_or_404(CategoriaResiduo, pk=pk)
+    if request.method == 'POST':
+        categoria.delete()
+        return redirect('lista_categorias')
+    return render(request, 'categorias/confirmar_eliminar.html', {'categoria': categoria})
