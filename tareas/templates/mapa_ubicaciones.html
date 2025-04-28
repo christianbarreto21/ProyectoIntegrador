@@ -105,7 +105,7 @@
                 zoom: 5,
                 center: {lat: 4.570868, lng: -74.297333}  // Centrado en Colombia
             });
-
+    
             var ubicaciones = JSON.parse('{{ ubicaciones_json|escapejs }}');
             ubicaciones.forEach(function(ubicacion) {
                 var fields = ubicacion.fields;
@@ -114,15 +114,21 @@
                     map: map,
                     title: fields.nombre
                 });
+    
                 var infowindow = new google.maps.InfoWindow({
-                    content: '<h3>' + fields.nombre + '</h3><p>' + fields.descripcion + '</p>'
-                });
+    content: '<h3>' + fields.nombre + '</h3><p>' + fields.descripcion + '</p>' +
+             '<a href="/cotizar/' + ubicacion.pk + '/" class="btn btn-primary">Cotizar</a>'
+});
+    
                 marker.addListener('click', function() {
                     infowindow.open(map, marker);
                 });
             });
         }
+    
+        window.onload = initMap;
     </script>
+    
 </head>
 <body onload="initMap()">
     <!-- Barra superior -->

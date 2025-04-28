@@ -1,4 +1,6 @@
 from datetime import timezone
+from decimal import Decimal
+import json
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse, reverse_lazy
@@ -10,8 +12,8 @@ from django.shortcuts import redirect
 from django.contrib.auth import logout
 import stripe
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import JsonResponse
-from .models import CategoriaResiduo, Ubicacion
+from django.http import HttpResponseRedirect, JsonResponse
+from .models import CategoriaResiduo, Empresa, Factura, Ubicacion, UbicacionCategoria
 from django.shortcuts import render
 from .models import Ubicacion, Usuario
 from django.conf import settings
@@ -20,7 +22,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Evento
-from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm
+from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm, UbicacionCategoriaFormSet
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
@@ -117,7 +119,8 @@ from .models import Ubicacion
 
 def mapa_ubicaciones(request):
     ubicaciones = Ubicacion.objects.all()
-    ubicaciones_json = serialize('json', ubicaciones)
+    ubicaciones_json = serialize('json', ubicaciones, fields=['id', 'nombre', 'latitud', 'longitud', 'descripcion'])
+    print(ubicaciones_json)  # Depuración para verificar el contenido
     return render(request, 'mapa_ubicaciones.html', {'ubicaciones_json': ubicaciones_json})
 
 
@@ -236,13 +239,22 @@ def editar_perfil(request):
 
 def crear_ubicacion(request):
     if request.method == 'POST':
-        form = UbicacionForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('mapa_ubicaciones')  # Redirige al mapa después de crear la ubicación
+        ubicacion_form = UbicacionForm(request.POST)
+        formset = UbicacionCategoriaFormSet(request.POST)
+
+        if ubicacion_form.is_valid() and formset.is_valid():
+            ubicacion = ubicacion_form.save()
+            formset.instance = ubicacion
+            formset.save()
+            return redirect('mapa_ubicaciones')  # O a donde quieras redirigir
     else:
-        form = UbicacionForm()
-    return render(request, 'crear_ubicacion.html', {'form': form})
+        ubicacion_form = UbicacionForm()
+        formset = UbicacionCategoriaFormSet()
+
+    return render(request, 'crear_ubicacion.html', {
+        'ubicacion_form': ubicacion_form,
+        'formset': formset,
+    })
 #filtro categorias
 def ubicacion_list(request):
     ubicaciones = Ubicacion.objects.all()
@@ -282,17 +294,34 @@ def buscar_por_categoria(request):
             ubicaciones = Ubicacion.objects.filter(categoria__icontains=categoria)  # Filtra por categoría
 
     return render(request, 'ubicaciones/buscar.html', {'form': form, 'ubicaciones': ubicaciones})
+@login_required
+def cotizar_ubicacion(request, ubicacion_id):
+    ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
+    categorias_disponibles = UbicacionCategoria.objects.filter(ubicacion=ubicacion)
 
-def cotizar_domicilio(request):
-    monto = None
-    form = CotizacionDomicilioForm(request.POST or None)
-    
-    if form.is_valid():
-        cotizacion = form.save(commit=False)
-        cotizacion.calcular_monto()  # Calcula el monto según el peso
-        monto = cotizacion.monto  # Guardamos el monto calculado
+    if request.method == 'POST':
+        for ubicacion_categoria in categorias_disponibles:
+            cantidad_str = request.POST.get(f'cantidad_{ubicacion_categoria.categoria.id}')
+            if cantidad_str:
+                try:
+                    cantidad = float(cantidad_str)
+                    if cantidad > 0:
+                        Carrito.objects.create(
+                            usuario=request.user,
+                            ubicacion_categoria=ubicacion_categoria,
+                            categoria=ubicacion_categoria.categoria,
+                            cantidad_kg=cantidad
+                        )
+                except ValueError:
+                    pass  # Ignorar valores no numéricos
 
-    return render(request, 'cotizaciones/cotizar_domicilio.html', {'form': form, 'monto': monto})
+        return redirect('ver_carrito')
+
+    return render(request, 'cotizaciones/cotizar_domicilio.html', {
+        'ubicacion': ubicacion,
+        'categorias_disponibles': categorias_disponibles,
+    })
+
 #expe
 @login_required
 def agregar_informe_manejo_residuos(request):
@@ -394,3 +423,122 @@ def eliminar_categoria(request, pk):
         categoria.delete()
         return redirect('lista_categorias')
     return render(request, 'categorias/confirmar_eliminar.html', {'categoria': categoria})
+
+from django.shortcuts import redirect, get_object_or_404
+from .models import CategoriaResiduo, Carrito
+
+def añadir_al_carrito(request):
+    if request.method == "POST":
+        # Verificar si el usuario está autenticado
+        if not request.user.is_authenticated:
+            return redirect('login')  # Redirigir al login si el usuario no está autenticado
+        
+        # Iterar sobre cada campo de cantidad de los formularios enviados
+        for key, value in request.POST.items():
+            if key.startswith('cantidad_kg_'):
+                # Obtener la categoría de residuo
+                categoria_id = key.split('_')[-1]
+                categoria = get_object_or_404(CategoriaResiduo, id=categoria_id)
+                
+                # Verificar que la cantidad sea un número positivo
+                try:
+                    cantidad = float(value)
+                    if cantidad > 0:
+                        # Crear o actualizar la entrada en el carrito
+                        carrito_item, created = Carrito.objects.get_or_create(
+                            usuario=request.user,
+                            categoria=categoria
+                        )
+                        # Actualizar la cantidad en el carrito
+                        carrito_item.cantidad_kg += cantidad
+                        carrito_item.save()
+                except ValueError:
+                    # Si no se puede convertir a float, ignorar ese valor
+                    pass
+    
+    return redirect('ver_carrito')  # Redirigir a la página donde el usuario puede ver el carrito
+
+@login_required
+def ver_carrito(request):
+    carrito_items = Carrito.objects.filter(usuario=request.user)
+    return render(request, 'ver_carrito.html', {'carrito_items': carrito_items})
+
+def mapa_ubicaciones1(request):
+    ubicaciones = Ubicacion.objects.all()
+    
+    ubicaciones_data = []
+    for ubicacion in ubicaciones:
+        ubicaciones_data.append({
+            'id': ubicacion.id, 
+            'nombre': ubicacion.nombre,
+            'latitud': ubicacion.latitud,
+            'longitud': ubicacion.longitud,
+            
+            
+        })
+        
+    context = {
+        'ubicaciones_json': json.dumps(ubicaciones_data)
+    }
+    return render(request, 'mapa_ubicaciones1.html', context)
+def agregar_empresa(request):
+    if request.method == 'POST':
+
+
+
+
+
+
+        form = EmpresaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('mapa_ubicaciones')  # Redirige al mapa después de crear la empresa
+    else:
+        form = EmpresaForm()
+    return render(request, 'templates/agregar_empresa.html', {'form': form})
+
+@login_required
+def realizar_pago(request):
+    carrito_items = Carrito.objects.filter(usuario=request.user)
+
+    if not carrito_items.exists():
+        messages.error(request, "Tu carrito está vacío.")
+        return redirect('ver_carrito')
+
+    total_pago = sum(item.precio_total for item in carrito_items)
+
+    if request.method == "POST":
+        # Crear Factura
+        factura = Factura.objects.create(
+            usuario=request.user,
+            total=Decimal(total_pago)
+        )
+
+        # Crear Detalles de Factura
+        for item in carrito_items:
+            DetalleFactura.objects.create(
+                factura=factura,
+                categoria=item.categoria,
+                cantidad_kg=item.cantidad_kg,
+                precio_unitario=item.precio_unitario,
+                precio_total=item.precio_total
+            )
+
+        # Vaciar carrito
+        carrito_items.delete()
+
+        messages.success(request, f"Pago realizado exitosamente. Factura #{factura.id} Total: ${total_pago:.2f}")
+        return redirect('ver_carrito')
+
+    return render(request, 'realizar_pago.html', {
+        'carrito_items': carrito_items,
+        'total_pago': total_pago
+    })
+
+@login_required
+def historial_facturas(request):
+    facturas = Factura.objects.filter(usuario=request.user).order_by('-fecha')
+
+    return render(request, 'historial_facturas.html', {
+        'facturas': facturas
+    })

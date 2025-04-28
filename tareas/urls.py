@@ -4,7 +4,7 @@ from django import views
 from django.urls import path
 
     
-from .views import  agregar_informe_manejo_residuos, agregar_informe_normativas, buscar_por_categoria, cotizar_domicilio, crear_categoria, crear_ubicacion, editar_categoria, eliminar_categoria,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, payment_view, registrar_usuario, resumen_co2, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
+from .views import  agregar_empresa, agregar_informe_manejo_residuos, agregar_informe_normativas, añadir_al_carrito, buscar_por_categoria, cotizar_ubicacion,  crear_categoria, crear_ubicacion, editar_categoria, eliminar_categoria, historial_facturas,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, mapa_ubicaciones1, payment_view, realizar_pago, registrar_usuario, resumen_co2, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_carrito, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
 
 
 urlpatterns = [
@@ -27,7 +27,7 @@ urlpatterns = [
     path('crear_ubicacion/', crear_ubicacion, name='crear_ubicacion'),
     path('mapa/', mapa_ubicaciones, name='mapa_ubicaciones'),
    path('buscar/', buscar_por_categoria, name='buscar_por_categoria'),
-   path('cotizar_domicilio/', cotizar_domicilio, name='cotizar_domicilio'),
+  
    path('lis/', ubicacion_list, name='ubicacion_list'),
    path('lis1/', ubicacion_list1, name='ubicacion_list'),
    path('editar/<int:pk>/', ubicacion_update, name='ubicacion_update'),
@@ -38,7 +38,13 @@ urlpatterns = [
     path('categorias/', lista_categorias, name='lista_categorias'),
     path('categorias/nueva/', crear_categoria, name='crear_categoria'),
     path('categorias/editar/<int:pk>/', editar_categoria, name='editar_categoria'),
-    path('categorias/eliminar/<int:pk>/', 
-         eliminar_categoria, name='eliminar_categoria'),
-
+    path('categorias/eliminar/<int:pk>/', eliminar_categoria, name='eliminar_categoria'),
+    path('cotizar/<int:ubicacion_id>/', cotizar_ubicacion, name='cotizar_ubicacion'),
+    path('añadir_al_carrito/', añadir_al_carrito, name='añadir_al_carrito'),
+    path('ver_carrito/', ver_carrito, name='ver_carrito'),
+    path('mapa_ubicaciones1/', mapa_ubicaciones1, name='mapa_ubicaciones'),
+    path('agregar_empresa/', agregar_empresa, name='agregar_empresa'),
+    path('realizar_pago/', realizar_pago, name='realizar_pago'),
+    path('historial_facturas/', historial_facturas, name='historial_facturas'),
 ]
+

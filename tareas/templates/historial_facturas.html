@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Historial de Compras</h2>
+
+    {% if facturas %}
+        <div class="list-group">
+            {% for factura in facturas %}
+                <div class="list-group-item mb-3">
+                    <h5>Factura #{{ factura.id }}</h5>
+                    <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Total:</strong> ${{ factura.total }}</p>
+
+                    <h6>Detalles:</h6>
+                    <ul>
+                        {% for detalle in factura.detalles.all %}
+                            <li>
+                                {{ detalle.categoria.nombre }} - {{ detalle.cantidad_kg }} kg x ${{ detalle.precio_unitario }} = ${{ detalle.precio_total }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No tienes compras registradas.</p>
+    {% endif %}
+
+    <a href="{% url 'ver_carrito' %}" class="btn btn-primary mt-3">Volver al Carrito</a>
+</div>
+{% endblock %}

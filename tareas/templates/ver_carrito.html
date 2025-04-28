@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Mi Carrito</h1>
+
+    {% if carrito_items %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Ubicación</th>
+                    <th>Categoría</th>
+                    <th>Cantidad (kg)</th>
+                    <th>Precio Unitario</th>
+                    <th>Precio Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in carrito_items %}
+                    <tr>
+                        <td>{{ item.ubicacion_categoria.ubicacion.nombre }}</td>
+                        <td>{{ item.categoria.nombre }}</td>
+                        <td>{{ item.cantidad_kg }}</td>
+                        <td>${{ item.precio_unitario }}</td>
+                        <td>${{ item.precio_total }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="{% url 'realizar_pago' %}" class="btn btn-success">Realizar Pago</a>
+    {% else %}
+        <p>No tienes productos en tu carrito.</p>
+    {% endif %}
+</div>
+{% endblock %}

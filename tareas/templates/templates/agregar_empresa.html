@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Empresa</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Barra de navegación superior */
+        .navbar {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .navbar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-btn,
+        .logout-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+        }
+
+        /* Barra lateral */
+        .sidebar {
+            width: 200px;
+            background-color: #34495e;
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+        }
+
+        .sidebar button:hover {
+            background-color: #27ae60;
+        }
+
+        /* Contenedor principal */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        /* Responsividad para pantallas más pequeñas */
+        @media (max-width: 600px) {
+            .navbar h1 {
+                font-size: 20px;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: relative;
+                box-shadow: none;
+            }
+
+            .sidebar button {
+                font-size: 16px;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button onclick="location.href='/mapa/'">Ver Mapa</button>
+        <button onclick="location.href='/buscar/'">Categoría</button>
+        <button onclick="location.href='/lis1/'">Ver Lugar</button>
+        <button onclick="location.href='/cotizar_domicilio/'">Cotizar</button>
+        <button onclick="location.href='/eventos/'">Eventos/</button>
+        <button onclick="location.href='/agregar_empresa/'">Agregar empresa/</button>
+        
+    </div>
+    <div class="main-content">
+        
+        <p><div class="navbar">
+            <h1>Ecoresiduos</h1>
+            <div class="navbar-buttons">
+                
+                <button class="profile-btn" onclick="location.href='/perfil/'">Perfil</button>
+                <button class="logout-btn" onclick="location.href='/logout/'">Logout</button>
+
+            </div>
+            
+        </div>
+        <h1>Registrar Nueva Empresa</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Guardar Ubicacion</button>
+    </form></p>
+    </div>
+</body>
+</html>

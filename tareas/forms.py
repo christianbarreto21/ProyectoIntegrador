@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm
-from .models import CotizacionDomicilio, Evento, Rol, Usuario
+from .models import CotizacionDomicilio, Empresa, Evento, Rol, Usuario
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Ubicacion
 
@@ -35,11 +35,26 @@ class RegistroUsuarioForm(UserCreationForm):
             user.save()
         return user
 
+from .models import Ubicacion, UbicacionCategoria, CategoriaResiduo
+from django.forms import inlineformset_factory
 
 class UbicacionForm(forms.ModelForm):
     class Meta:
         model = Ubicacion
-        fields = ['nombre', 'descripcion', 'latitud', 'longitud', 'categoria']
+        fields = ['nombre', 'descripcion', 'latitud', 'longitud']
+
+class UbicacionCategoriaForm(forms.ModelForm):
+    class Meta:
+        model = UbicacionCategoria
+        fields = ['categoria', 'precio']
+
+UbicacionCategoriaFormSet = inlineformset_factory(
+    Ubicacion,
+    UbicacionCategoria,
+    form=UbicacionCategoriaForm,
+    extra=1,
+    can_delete=True
+)
 
 class BuscarCategoriaForm(forms.Form):
     categoria = forms.CharField(max_length=100, label='Categoría', required=False)
@@ -66,4 +81,10 @@ from .models import CategoriaResiduo
 class CategoriaResiduoForm(forms.ModelForm):
     class Meta:
         model = CategoriaResiduo
-        fields = ['nombre', 'factor_co2']
+        fields = ['nombre', 'factor_co2'] 
+
+class EmpresaForm(forms.ModelForm):
+    class Meta:
+        model = Empresa
+        fields = ['nombre', 'latitud','longitud']
+

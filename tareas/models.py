@@ -1,3 +1,5 @@
+from decimal import Decimal
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
@@ -34,14 +36,7 @@ class Usuario(AbstractUser):
         return self.email
 
 
-class Ubicacion(models.Model):
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
-    latitud = models.FloatField()
-    longitud = models.FloatField()
-    categoria  = models.CharField(max_length=100)
-    def _str_(self):
-        return self.nombre 
+
 
 class Evento(models.Model):
     nombre = models.CharField(max_length=200)
@@ -93,6 +88,26 @@ class CategoriaResiduo(models.Model):
 
     def __str__(self):
         return self.nombre
+
+class Ubicacion(models.Model):
+    nombre = models.CharField(max_length=100)
+    descripcion = models.TextField(blank=True)
+    latitud = models.FloatField()
+    longitud = models.FloatField()
+    
+    categorias = models.ManyToManyField(CategoriaResiduo, through='UbicacionCategoria')
+
+    def __str__(self):
+        return self.nombre
+
+class UbicacionCategoria(models.Model):
+    ubicacion = models.ForeignKey(Ubicacion, on_delete=models.CASCADE)
+    categoria = models.ForeignKey(CategoriaResiduo, on_delete=models.CASCADE)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):                                                                                                                           
+        return f"{self.ubicacion.nombre} - {self.categoria.nombre} (${self.precio})"
+
 class RegistroResiduo(models.Model):
     categoria = models.ForeignKey(CategoriaResiduo, on_delete=models.CASCADE)
     cantidad_kg = models.FloatField()
@@ -104,3 +119,51 @@ class RegistroResiduo(models.Model):
 
     def __str__(self):
         return f"{self.categoria.nombre} - {self.cantidad_kg} kg"
+    
+class Carrito(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    ubicacion_categoria = models.ForeignKey(UbicacionCategoria, on_delete=models.CASCADE) 
+    categoria = models.ForeignKey(CategoriaResiduo, on_delete=models.CASCADE)
+    cantidad_kg = models.FloatField()
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Carrito de {self.usuario.username} - {self.categoria.nombre} en {self.ubicacion_categoria.ubicacion.nombre}"
+
+    @property
+    def precio_unitario(self):
+        return self.ubicacion_categoria.precio
+
+@property
+def precio_total(self):
+    return self.precio_unitario * Decimal(str(self.cantidad_kg))
+
+class Factura(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Factura #{self.id} - {self.usuario.username} - {self.fecha.date()}"
+
+
+class DetalleFactura(models.Model):
+    factura = models.ForeignKey(Factura, related_name='detalles', on_delete=models.CASCADE)
+    categoria = models.ForeignKey('CategoriaResiduo', on_delete=models.CASCADE)
+    cantidad_kg = models.FloatField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    precio_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.categoria.nombre} - {self.cantidad_kg} kg"
+    
+class Empresa(models.Model):
+    nombre = models.CharField(max_length=100)
+    direccion = models.TextField(blank=True, null=True)
+    telefono = models.CharField(max_length=20, blank=True, null=True)
+    latitud = models.FloatField()
+    longitud = models.FloatField()
+    #usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, null=True, blank=True)
+    
+    def __str__(self):
+        return self.nombre
