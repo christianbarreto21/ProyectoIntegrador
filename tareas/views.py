@@ -1,8 +1,16 @@
 from datetime import timezone
 from decimal import Decimal
 import json
+from django.template.loader import get_template
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+from .models import Carrito, Factura, DetalleFactura, RegistroResiduo
+from django.db.models import Sum, F, FloatField, ExpressionWrapper
+from io import BytesIO
+from django.template.loader import render_to_string
+from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
@@ -10,10 +18,12 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+from django.utils.timezone import now
+from django.db.models import Sum, F, FloatField, ExpressionWrapper
 import stripe
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseRedirect, JsonResponse
-from .models import CategoriaResiduo, Empresa, Factura, Ubicacion, UbicacionCategoria
+from .models import CategoriaResiduo, DetalleFactura, Empresa, Factura, Ubicacion, UbicacionCategoria,  RegistroResiduo
 from django.shortcuts import render
 from .models import Ubicacion, Usuario
 from django.conf import settings
@@ -26,7 +36,9 @@ from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, E
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
-
+from xhtml2pdf import pisa
+import openpyxl
+from openpyxl.chart import PieChart, Reference
 def home1(request):
     return render(request, 'home.html')
 
@@ -383,9 +395,20 @@ from .models import RegistroResiduo
 
 def resumen_co2(request):
     registros = RegistroResiduo.objects.select_related('categoria')
-    total_co2 = sum(r.co2_evitable for r in registros)
+    
+    co2_por_categoria = registros.values('categoria__nombre').annotate(
+        total_co2=Sum(
+            ExpressionWrapper(
+                F('cantidad_kg') * F('categoria__factor_co2'),
+                output_field=FloatField()
+            )
+        )
+    )
+
+    total_co2 = sum(cat['total_co2'] for cat in co2_por_categoria)
+
     return render(request, 'resumen_co2.html', {
-        'registros': registros,
+        'co2_por_categoria': co2_por_categoria,
         'total_co2': total_co2
     })
 
@@ -497,44 +520,63 @@ def agregar_empresa(request):
         form = EmpresaForm()
     return render(request, 'templates/agregar_empresa.html', {'form': form})
 
-@login_required
 def realizar_pago(request):
     carrito_items = Carrito.objects.filter(usuario=request.user)
 
-    if not carrito_items.exists():
-        messages.error(request, "Tu carrito está vacío.")
-        return redirect('ver_carrito')
+    if not carrito_items:
+        return redirect('carrito_vacio')
 
-    total_pago = sum(item.precio_total for item in carrito_items)
+    total_compra = sum(item.precio_total for item in carrito_items)
 
-    if request.method == "POST":
-        # Crear Factura
-        factura = Factura.objects.create(
-            usuario=request.user,
-            total=Decimal(total_pago)
+    factura = Factura.objects.create(
+        usuario=request.user,
+        total=total_compra
+    )
+
+    for item in carrito_items:
+        DetalleFactura.objects.create(
+            factura=factura,
+            categoria=item.categoria,
+            cantidad_kg=item.cantidad_kg,
+            precio_unitario=item.precio_unitario,
+            precio_total=item.precio_total
         )
 
-        # Crear Detalles de Factura
-        for item in carrito_items:
-            DetalleFactura.objects.create(
-                factura=factura,
-                categoria=item.categoria,
-                cantidad_kg=item.cantidad_kg,
-                precio_unitario=item.precio_unitario,
-                precio_total=item.precio_total
-            )
+        RegistroResiduo.objects.create(
+            categoria=item.categoria,
+            cantidad_kg=item.cantidad_kg
+        )
 
-        # Vaciar carrito
-        carrito_items.delete()
+    carrito_items.delete()
 
-        messages.success(request, f"Pago realizado exitosamente. Factura #{factura.id} Total: ${total_pago:.2f}")
-        return redirect('ver_carrito')
+    co2_acumulado = RegistroResiduo.objects.annotate(
+        co2=ExpressionWrapper(
+            F('cantidad_kg') * F('categoria__factor_co2'),
+            output_field=FloatField()
+        )
+    ).aggregate(total_co2=Sum('co2'))['total_co2'] or 0
 
-    return render(request, 'realizar_pago.html', {
-        'carrito_items': carrito_items,
-        'total_pago': total_pago
+    # Puedes mostrar un mensaje de éxito si usas el sistema de mensajes
+    messages.success(request, f"Pago realizado exitosamente. Has evitado {co2_acumulado:.2f} kg de CO₂ en total.")
+
+    return redirect('mapa_ubicaciones1')
+
+def generar_pdf(factura, co2_acumulado):
+    # Renderizar el HTML para la factura
+    html = render_to_string('factura_pdf.html', {
+        'factura': factura,
+        'co2_acumulado': round(co2_acumulado, 2),
     })
 
+    # Convertir HTML a PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="factura_{}.pdf"'.format(factura.id)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF', status=500)
+    
+    return response
 @login_required
 def historial_facturas(request):
     facturas = Factura.objects.filter(usuario=request.user).order_by('-fecha')
@@ -542,3 +584,93 @@ def historial_facturas(request):
     return render(request, 'historial_facturas.html', {
         'facturas': facturas
     })
+
+def pago_exitoso(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id)
+
+    # Cálculo del CO₂ evitado acumulado
+    co2_acumulado = RegistroResiduo.objects.annotate(
+        co2=ExpressionWrapper(
+            F('cantidad_kg') * F('categoria__factor_co2'),
+            output_field=FloatField()
+        )
+    ).aggregate(total_co2=Sum('co2'))['total_co2'] or 0
+
+    return render(request, 'pago_exitoso.html', {
+        'factura': factura,
+        'co2_acumulado': round(co2_acumulado, 2),
+    })
+
+
+def carrito_vacio(request):
+    return render(request, 'carrito_vacio.html')
+
+import openpyxl
+from openpyxl.chart import PieChart, Reference
+from openpyxl.styles import Font
+from django.http import HttpResponse
+from .models import RegistroResiduo
+from collections import defaultdict
+
+def exportar_excel(request):
+    registros = RegistroResiduo.objects.select_related('categoria')
+
+    # Agrupar por categoría
+    datos = defaultdict(lambda: {'cantidad_kg': 0, 'co2': 0})
+    for r in registros:
+        nombre = r.categoria.nombre
+        datos[nombre]['cantidad_kg'] += r.cantidad_kg
+        datos[nombre]['co2'] += r.co2_evitable
+
+    # Crear libro
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Resumen CO2"
+
+    # Encabezado
+    encabezados = ["Categoría", "Cantidad (kg)", "CO₂ Evitado (kg)"]
+    ws.append(encabezados)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+
+    # Datos
+    for nombre, valores in datos.items():
+        ws.append([nombre, valores['cantidad_kg'], valores['co2']])
+
+    # Crear gráfico de pastel
+    chart = PieChart()
+    chart.title = "Distribución de CO₂ Evitado por Categoría"
+    data = Reference(ws, min_col=3, min_row=1, max_row=ws.max_row)
+    labels = Reference(ws, min_col=1, min_row=2, max_row=ws.max_row)
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(labels)
+    ws.add_chart(chart, "E5")  # Posición del gráfico
+
+    # Crear respuesta
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="resumen_co2.xlsx"'
+    wb.save(response)
+    return response
+
+def exportar_pdf(request):
+    registros = RegistroResiduo.objects.select_related('categoria')
+    total_co2 = sum(r.co2_evitable for r in registros)
+
+    template_path = 'reporte_co2_pdf.html'
+    context = {
+        'registros': registros,
+        'total_co2': total_co2
+    }
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="resumen_co2.pdf"'
+
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF', status=500)
+    return response

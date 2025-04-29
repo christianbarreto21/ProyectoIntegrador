@@ -1,26 +1,40 @@
 {% extends "base.html" %}
 
-{% block title %}Resumen CO₂ Evitado{% endblock %}
-
 {% block content %}
-    <h2>CO₂ evitado por gestión de residuos</h2>
+<div class="container mt-5">
+    <h2 class="mb-4">Resumen de CO₂ Evitado</h2>
+
     <table class="table table-bordered">
-        <thead>
+        <thead class="thead-dark">
             <tr>
                 <th>Categoría</th>
-                <th>Cantidad (kg)</th>
-                <th>CO₂ evitado (kg)</th>
+                <th>Total CO₂ Evitado (kg)</th>
             </tr>
         </thead>
         <tbody>
-            {% for registro in registros %}
-            <tr>
-                <td>{{ registro.categoria.nombre }}</td>
-                <td>{{ registro.cantidad_kg }}</td>
-                <td>{{ registro.co2_evitable }}</td>
-            </tr>
+            {% for item in co2_por_categoria %}
+                <tr>
+                    <td>{{ item.categoria__nombre }}</td>
+                    <td>{{ item.total_co2|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="2">No hay registros aún.</td>
+                </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr>
+                <th>Total Acumulado</th>
+                <th>{{ total_co2|floatformat:2 }} kg</th>
+            </tr>
+        </tfoot>
     </table>
-    <h4>Total CO₂ evitado: {{ total_co2 }} kg</h4>
+
+    <div class="mt-4">
+        <a href="{% url 'exportar_excel' %}" class="btn btn-success">Exportar a Excel</a>
+        <a href="{% url 'exportar_pdf' %}" class="btn btn-danger">Exportar a PDF</a>
+    </div>
+</div>
 {% endblock %}
+

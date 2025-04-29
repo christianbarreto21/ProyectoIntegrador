@@ -4,7 +4,7 @@ from django import views
 from django.urls import path
 
     
-from .views import  agregar_empresa, agregar_informe_manejo_residuos, agregar_informe_normativas, añadir_al_carrito, buscar_por_categoria, cotizar_ubicacion,  crear_categoria, crear_ubicacion, editar_categoria, eliminar_categoria, historial_facturas,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, mapa_ubicaciones1, payment_view, realizar_pago, registrar_usuario, resumen_co2, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_carrito, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
+from .views import  agregar_empresa, agregar_informe_manejo_residuos, agregar_informe_normativas, añadir_al_carrito, buscar_por_categoria, carrito_vacio, cotizar_ubicacion,  crear_categoria, crear_ubicacion, editar_categoria, eliminar_categoria, exportar_excel, exportar_pdf, historial_facturas,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, mapa_ubicaciones1, payment_view, realizar_pago, registrar_usuario, resumen_co2, ubicacion_delete, ubicacion_list, ubicacion_list1, ubicacion_update, ver_carrito, ver_perfil, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
 
 
 urlpatterns = [
@@ -42,9 +42,12 @@ urlpatterns = [
     path('cotizar/<int:ubicacion_id>/', cotizar_ubicacion, name='cotizar_ubicacion'),
     path('añadir_al_carrito/', añadir_al_carrito, name='añadir_al_carrito'),
     path('ver_carrito/', ver_carrito, name='ver_carrito'),
-    path('mapa_ubicaciones1/', mapa_ubicaciones1, name='mapa_ubicaciones'),
+    path('mapa_ubicaciones1/', mapa_ubicaciones1, name='mapa_ubicaciones1'),
     path('agregar_empresa/', agregar_empresa, name='agregar_empresa'),
     path('realizar_pago/', realizar_pago, name='realizar_pago'),
     path('historial_facturas/', historial_facturas, name='historial_facturas'),
+    path('carrito_vacio/', carrito_vacio, name='carrito_vacio'),
+    path('exportar-excel/', exportar_excel, name='exportar_excel'),
+    path('exportar-pdf/', exportar_pdf, name='exportar_pdf'),
 ]
 

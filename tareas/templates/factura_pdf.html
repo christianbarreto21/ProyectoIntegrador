@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura #{{ factura.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h2 {
+            margin: 0;
+        }
+        .table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .total {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Factura #{{ factura.id }}</h2>
+        <p>Fecha: {{ factura.fecha }}</p>
+        <p><strong>Total Pagado: ${{ factura.total }}</strong></p>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>Precio Unitario</th>
+                <th>Precio Total</th>
+                <th>CO₂ Evitado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in factura.detalles.all %}
+                <tr>
+                    <td>{{ detalle.categoria.nombre }}</td>
+                    <td>{{ detalle.cantidad_kg }}</td>
+                    <td>${{ detalle.precio_unitario }}</td>
+                    <td>${{ detalle.precio_total }}</td>
+                   
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p><strong>CO₂ evitado acumulado hasta ahora:</strong> {{ co2_acumulado }} kg</p>
+        <p>Gracias por apoyar el medio ambiente con tus compras</p>
+    </div>
+</body>
+</html>

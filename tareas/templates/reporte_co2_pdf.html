@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumen CO₂</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: center; }
+        th { background-color: #ddd; }
+    </style>
+</head>
+<body>
+    <h2>Resumen de CO₂ evitado por categoría</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>CO₂ Evitado (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registro in registros %}
+            <tr>
+                <td>{{ registro.categoria.nombre }}</td>
+                <td>{{ registro.cantidad_kg }}</td>
+                <td>{{ registro.co2_evitable }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h4>Total CO₂ evitado: {{ total_co2 }} kg</h4>
+</body>
+</html>

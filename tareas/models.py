@@ -134,9 +134,9 @@ class Carrito(models.Model):
     def precio_unitario(self):
         return self.ubicacion_categoria.precio
 
-@property
-def precio_total(self):
-    return self.precio_unitario * Decimal(str(self.cantidad_kg))
+    @property
+    def precio_total(self):
+     return self.precio_unitario * Decimal(str(self.cantidad_kg))
 
 class Factura(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -167,3 +167,4 @@ class Empresa(models.Model):
     
     def __str__(self):
         return self.nombre
+

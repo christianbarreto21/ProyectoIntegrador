@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-success">
+        <h4 class="alert-heading">¡Pago realizado con éxito!</h4>
+        <p>Gracias por tu compra. Aquí tienes los detalles de la factura:</p>
+    </div>
+
+    <h5>Factura #{{ factura.id }} - {{ factura.fecha.date }}</h5>
+    <p><strong>Total pagado:</strong> ${{ factura.total }}</p>
+
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>Precio unitario</th>
+                <th>Precio total</th>
+                <th>CO₂ Evitado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in factura.detalles.all %}
+                <tr>
+                    <td>{{ detalle.categoria.nombre }}</td>
+                    <td>{{ detalle.cantidad_kg }}</td>
+                    <td>${{ detalle.precio_unitario }}</td>
+                    <td>${{ detalle.precio_total }}</td>
+                    <td>{{ detalle.cantidad_kg|floatformat:2|add:"0" |floatformat }} × {{ detalle.categoria.factor_co2 }} = 
+                        {{ detalle.cantidad_kg|floatformat:2|add:"0" |floatformat|floatformat|floatformat|floatformat }} × {{ detalle.categoria.factor_co2 }} = 
+                        {{ detalle.cantidad_kg|floatformat:2|add:"0"|floatformat|floatformat|floatformat|floatformat|floatformat }} | {% widthratio detalle.cantidad_kg detalle.cantidad_kg detalle.categoria.factor_co2 %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="alert alert-info mt-4">
+        🌍 <strong>CO₂ evitado acumulado hasta ahora:</strong> {{ co2_acumulado }} kg
+    </div>
+
+    <a href="{% url 'inicio' %}" class="btn btn-primary mt-3">Volver al inicio</a>
+</div>
+{% endblock %}
+

@@ -1,24 +1,70 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #000;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Factura #{{ factura.id }}</h1>
+    <h2>Fecha: {{ factura.fecha }}</h2>
+    <h3>Usuario: {{ factura.usuario.username }}</h3>
 
-{% block content %}
-<div class="container mt-4">
-    <h2>Confirmar Pago</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>Precio Unitario</th>
+                <th>Precio Total</th>
+                <th>CO₂ Evitado (kg)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in factura.detalles.all %}
+                {% with co2_evitable=detalle.cantidad_kg|add:0 * detalle.categoria.factor_co2 %}
+                    <tr>
+                        <td>{{ detalle.categoria.nombre }}</td>
+                        <td>{{ detalle.cantidad_kg }}</td>
+                        <td>${{ detalle.precio_unitario }}</td>
+                        <td>${{ detalle.precio_total }}</td>
+                        <td>{{ co2_evitable|floatformat:2 }}</td>
+                    </tr>
+                {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
 
-    <ul class="list-group mb-3">
-        {% for item in carrito_items %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                {{ item.categoria.nombre }} ({{ item.cantidad_kg }} kg)
-                <span>${{ item.precio_total }}</span>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="footer">
+        <p><strong>CO₂ evitado acumulado hasta ahora:</strong> {{ co2_acumulado }} kg</p>
+        <p>Gracias por apoyar el medio ambiente con tus compras</p>
+    </div>
+</body>
+</html>
 
-    <h4>Total a pagar: ${{ total_pago }}</h4>
-
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-success">Realizar Pago</button>
-        <a href="{% url 'ver_carrito' %}" class="btn btn-secondary">Cancelar</a>
-    </form>
-</div>
-{% endblock %}
