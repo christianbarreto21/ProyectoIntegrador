@@ -96,6 +96,7 @@ class Ubicacion(models.Model):
     longitud = models.FloatField()
     
     categorias = models.ManyToManyField(CategoriaResiduo, through='UbicacionCategoria')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ubicaciones')
 
     def __str__(self):
         return self.nombre

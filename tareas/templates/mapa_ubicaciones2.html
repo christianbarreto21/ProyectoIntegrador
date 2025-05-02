@@ -1,4 +1,4 @@
-{% extends "base3.html" %}
+{% extends "base2.html" %}
 {% block title %}Mapa de Ubicaciones{% endblock %}
 
 {% block content %}
@@ -35,7 +35,7 @@
             <strong>${ubicacion.nombre}</strong><br>
             ${ubicacion.direccion}<br>
             <button onclick="calcularRuta(${ubicacion.latitud}, ${ubicacion.longitud})">Cómo llegar</button><br><br>
-            
+            <a href="/cotizar/${ubicacion.id}/" class="btn btn-primary btn-sm">Cotizar</a>
         `);
     });
 

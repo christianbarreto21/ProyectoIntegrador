@@ -6,7 +6,7 @@ from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from .models import Carrito, Factura, DetalleFactura, RegistroResiduo
+from .models import Carrito, Factura, DetalleFactura, RegistroResiduo, Rol
 from django.db.models import Sum, F, FloatField, ExpressionWrapper
 from io import BytesIO
 from django.template.loader import render_to_string
@@ -32,7 +32,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Evento
-from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm,  RegistroUsuarioForm, UbicacionCategoriaFormSet
+from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm, RegistroGestorForm,  RegistroUsuarioForm, UbicacionCategoriaFormSet
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
@@ -60,6 +60,19 @@ def  home_view(request):
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
+def registrar_gestor(request):
+    if request.method == 'POST':
+        form = RegistroGestorForm(request.POST)
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            # Asignar el rol "Gestor de Residuos"
+            rol_gestor, _ = Rol.objects.get_or_create(nombre="Gestor de Residuos")
+            usuario.rol = rol_gestor
+            usuario.save()
+            return redirect('login')  # O redirige donde prefieras
+    else:
+        form = RegistroGestorForm()
+    return render(request, 'registro_gestor.html', {'form': form})
 
 def login_usuario(request):
     if request.method == 'POST':
@@ -75,7 +88,7 @@ def login_usuario(request):
                 # Redirigir según el rol del usuario
                 rol_nombre = user.rol.nombre if user.rol else ''
                 rutas_roles = {
-                    'gestor de residuos': 'vista_gestor_residuos',
+                    'Gestor de Residuos': 'vista_gestor_residuos',
                     'experto_ambiental': 'vista_experto_ambiental',
                     'clienteempresa': 'vista_clienteempresa',
                     'clientenatural': 'vista_clientenatural'
@@ -255,10 +268,13 @@ def crear_ubicacion(request):
         formset = UbicacionCategoriaFormSet(request.POST)
 
         if ubicacion_form.is_valid() and formset.is_valid():
-            ubicacion = ubicacion_form.save()
+            ubicacion = ubicacion_form.save(commit=False)
+            ubicacion.usuario = request.user  # Asigna el usuario actual
+            ubicacion.save()
+
             formset.instance = ubicacion
             formset.save()
-            return redirect('mapa_ubicaciones')  # O a donde quieras redirigir
+            return redirect('mapa_ubicaciones1')  # Redirige después de guardar
     else:
         ubicacion_form = UbicacionForm()
         formset = UbicacionCategoriaFormSet()
@@ -267,6 +283,7 @@ def crear_ubicacion(request):
         'ubicacion_form': ubicacion_form,
         'formset': formset,
     })
+
 #filtro categorias
 def ubicacion_list(request):
     ubicaciones = Ubicacion.objects.all()
@@ -276,24 +293,31 @@ def ubicacion_list1(request):
     ubicaciones = Ubicacion.objects.all()
     return render(request, 'ubicaciones/ubicacion_list1.html', {'ubicaciones': ubicaciones})
 from .forms import BuscarCategoriaForm
-def ubicacion_update(request, pk):
-    ubicacion = get_object_or_404(Ubicacion, pk=pk)
+
+@login_required
+def mis_ubicaciones(request):
+    ubicaciones = Ubicacion.objects.filter(usuario=request.user)
+    return render(request, 'mis_ubicaciones.html', {'ubicaciones': ubicaciones})
+
+@login_required
+def actualizar_ubicacion(request, pk):
+    ubicacion = get_object_or_404(Ubicacion, pk=pk, usuario=request.user)
     if request.method == 'POST':
         form = UbicacionForm(request.POST, instance=ubicacion)
         if form.is_valid():
             form.save()
-            return redirect('ubicacion_detail', pk=ubicacion.pk)
+            return redirect('mis_ubicaciones')
     else:
         form = UbicacionForm(instance=ubicacion)
-    return render(request, 'ubicaciones/ubicacion_form.html', {'form': form})
+    return render(request, 'ubicaciones/editar_ubicacion.html', {'form': form})
 
-# Vista para eliminar una ubicación
-def ubicacion_delete(request, pk):
-    ubicacion = get_object_or_404(Ubicacion, pk=pk)
+@login_required
+def eliminar_ubicacion(request, pk):
+    ubicacion = get_object_or_404(Ubicacion, pk=pk, usuario=request.user)
     if request.method == 'POST':
         ubicacion.delete()
-        return redirect('ubicacion_list')  # Redirige a la lista de ubicaciones
-    return render(request, 'ubicaciones/ubicacion_confirm_delete.html', {'ubicacion': ubicacion})
+        return redirect('mis_ubicaciones')
+    return render(request, 'ubicaciones/confirmar_eliminacion.html', {'ubicacion': ubicacion})
 
 
 def buscar_por_categoria(request):
@@ -486,6 +510,26 @@ def ver_carrito(request):
     carrito_items = Carrito.objects.filter(usuario=request.user)
     return render(request, 'ver_carrito.html', {'carrito_items': carrito_items})
 
+def mapa_ubicaciones2(request):
+    ubicaciones = Ubicacion.objects.all()
+    
+    ubicaciones_data = []
+    for ubicacion in ubicaciones:
+        ubicaciones_data.append({
+            'id': ubicacion.id, 
+            'nombre': ubicacion.nombre,
+            'latitud': ubicacion.latitud,
+            'longitud': ubicacion.longitud,
+            
+            
+        })
+        
+    context = {
+        'ubicaciones_json': json.dumps(ubicaciones_data)
+    }
+    return render(request, 'mapa_ubicaciones2.html', context)
+
+
 def mapa_ubicaciones1(request):
     ubicaciones = Ubicacion.objects.all()
     
@@ -674,3 +718,16 @@ def exportar_pdf(request):
     if pisa_status.err:
         return HttpResponse('Error al generar el PDF', status=500)
     return response
+
+def buscar_por_categoria(request):
+    ubicaciones = None
+    form = BuscarCategoriaForm(request.GET or None)
+
+    if form.is_valid():
+        categoria = form.cleaned_data['categoria']
+        ubicaciones = Ubicacion.objects.filter(categorias=categoria).distinct()
+
+    return render(request, 'buscar_por_categoria.html', {
+        'form': form,
+        'ubicaciones': ubicaciones
+    })

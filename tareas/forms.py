@@ -88,3 +88,15 @@ class EmpresaForm(forms.ModelForm):
         model = Empresa
         fields = ['nombre', 'latitud','longitud']
 
+class BuscarCategoriaForm(forms.Form):
+    categoria = forms.ModelChoiceField(
+        queryset=CategoriaResiduo.objects.all(),
+        label="Selecciona una categoría",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+class RegistroGestorForm(UserCreationForm):
+    usable_password = None
+    class Meta:
+        
+        model = Usuario
+        fields = ['nombre', 'email', 'telefono', 'direccion', 'identificacion', 'password1', 'password2']

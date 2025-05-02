@@ -1,0 +1,32 @@
+{% extends "base3.html" %}
+{% block title %}Mis Ubicaciones{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Mis Ubicaciones</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Dirección</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ubicacion in ubicaciones %}
+            <tr>
+                <td>{{ ubicacion.nombre }}</td>
+                <td>{{ ubicacion.direccion }}</td>
+                <td>
+                    <a href="{% url 'editar_ubicacion' ubicacion.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'eliminar_ubicacion' ubicacion.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No tienes ubicaciones registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

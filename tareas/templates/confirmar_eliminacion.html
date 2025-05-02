@@ -1,0 +1,12 @@
+{% extends "base3.html" %}
+{% block title %}Eliminar Ubicación{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h3>¿Estás seguro de que deseas eliminar "{{ ubicacion.nombre }}"?</h3>
+    <form method="post">
+        {% csrf_token %}
+        <a href="{% url 'mis_ubicaciones' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+    </form>
+</div>
+{% endblock %}

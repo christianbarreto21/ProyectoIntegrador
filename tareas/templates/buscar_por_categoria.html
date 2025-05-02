@@ -1,0 +1,42 @@
+{% extends "base2.html" %}
+{% block title %}Buscar por Categoría{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h2 class="mb-0">Buscar Ubicaciones por Categoría</h2>
+        </div>
+        <div class="card-body">
+            <form method="get" class="mb-4">
+                <div class="mb-3">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-search me-1"></i>Buscar
+                </button>
+            </form>
+
+            {% if ubicaciones %}
+                <h4>Resultados:</h4>
+                <ul class="list-group">
+                    {% for ubicacion in ubicaciones %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ ubicacion.nombre }}</strong>: {{ ubicacion.descripcion }}
+                            </div>
+                            <a href="{% url 'cotizar_ubicacion' ubicacion.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-dollar-sign me-1"></i>Cotizar
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% elif ubicaciones is not None %}
+                <div class="alert alert-warning mt-3" role="alert">
+                    No se encontraron ubicaciones para esa categoría.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
