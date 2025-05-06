@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm
-from .models import CotizacionDomicilio, Empresa, Evento, Rol, Usuario
+from .models import CotizacionDomicilio, Empresa, Evento, Recoleccion, Rol, Usuario
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Ubicacion
 
@@ -42,7 +42,44 @@ class UbicacionForm(forms.ModelForm):
     class Meta:
         model = Ubicacion
         fields = ['nombre', 'descripcion', 'latitud', 'longitud']
-
+class RecoleccionForm(forms.ModelForm):
+    class Meta:
+        model = Recoleccion
+        exclude = ['factura', 'fecha_solicitud']  # Se asignan automáticamente
+        widgets = {
+            'direccion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Calle 100 #15-20'
+            }),
+            'ciudad': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ciudad o municipio'
+            }),
+            'barrio': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Opcional'
+            }),
+            'referencia': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Cerca a..., entre... (opcional)'
+            }),
+            'observaciones': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Observaciones adicionales',
+                'rows': 3
+            }),
+        }
+        labels = {
+            'direccion': 'Dirección',
+            'ciudad': 'Ciudad/Municipio',
+            'barrio': 'Barrio/Localidad',
+            'referencia': 'Punto de referencia',
+            'observaciones': 'Observaciones adicionales',
+        }
+        help_texts = {
+            'direccion': 'Calle y número, ej: Calle 100 #15-20',
+            'ciudad': 'Ciudad o municipio donde se realizará la recolección',
+        }
 class UbicacionCategoriaForm(forms.ModelForm):
     class Meta:
         model = UbicacionCategoria
