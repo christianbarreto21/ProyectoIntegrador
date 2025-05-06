@@ -1,48 +1,174 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Inicio - Proyecto{% endblock %}
+{% block title %}Inicio - EcoResiduos{% endblock %}
 
 {% block content %}
 <style>
-    .main {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 50px;
+    .hero {
+        padding: 60px 20px 40px;
+        background: linear-gradient(135deg, #a3f0d8 0%, #b2d8d8 100%);
+        text-align: center;
+        color: #2f3e46;
     }
-    .text-content {
-        max-width: 600px;
+
+    .hero h1 {
+        font-size: 3em;
+        font-weight: bold;
+        margin-bottom: 10px;
     }
-    h1 {
-        font-size: 2em;
-        color: #000066;
+
+    .hero p {
+        font-size: 1.3em;
+        color: #355c50;
     }
-    .text-content p {
-        color: #444;
-    }
-    .btn-services {
-        display: inline-block;
-        margin-top: 15px;
-        padding: 10px 20px;
-        background-color: #0e5846;
+
+    .cta-button {
+        margin-top: 25px;
+        background-color: #2f3e46;
         color: white;
-        text-decoration: none;
-        border-radius: 5px;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        transition: background-color 0.3s ease;
     }
-    .image-container img {
-        width: 600px;
+
+    .cta-button:hover {
+        background-color: #52796f;
+    }
+
+    .image-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        padding: 50px 40px 30px;
+        justify-items: center;
+        background-color: #f6fdfd;
+    }
+
+    .image-box {
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-align: center;
+        max-width: 350px;
+    }
+
+    .image-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-box img {
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .image-box p {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0e5846;
+        margin: 0;
+    }
+
+    .description {
+        background-color: #ffffff;
+        padding: 50px 40px;
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #333;
+        text-align: justify;
+    }
+
+    .description strong {
+        color: #2f3e46;
+    }
+
+    footer {
+        background-color: #2f3e46;
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+
+    footer a {
+        color: #a3f0d8;
+        margin: 0 10px;
+        text-decoration: none;
+    }
+
+    footer a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2.2em;
+        }
+
+        .image-section {
+            padding: 30px 20px;
+        }
+
+        .description {
+            padding: 30px 20px;
+        }
     }
 </style>
 
-<section class="main">
-    <div class="text-content">
-        <h1>Bienvenido a <strong>Ecoresiduos</strong></h1>
-        <p> para proteger el medio ambiente y garantizar la salud pública. Separar los residuos y desecharlos correctamente ayuda a reducir la contaminación, facilita el reciclaje y disminuye la cantidad de basura que termina en los rellenos sanitarios.</p>
-        <a href="#" class="btn-services">Servicios</a>
-    </div>
-    <div class="image-container">
-        <img src="{% static 'images/Contenedores-para-el-reciclaje.jpg' %}" class="img-fluid rounded shadow-lg" alt="Contenedores de reciclaje">
-    </div>
+<!-- Sección hero -->
+<section class="hero">
+    <h1>Bienvenido a <strong>EcoResiduos</strong></h1>
+    <p>Tu plataforma ecológica para la recolección de residuos a domicilio</p>
+    <a href="{% url 'registro_usuario' %}" class="cta-button">Empieza ahora</a>
 </section>
+
+<!-- Sección de tarjetas con imágenes -->
+<div class="image-section">
+    <div class="image-box">
+        <img src="{% static 'images/organico.jpeg' %}" alt="Recolección a domicilio">
+        <p>Recolección a domicilio</p>
+    </div>
+    <div class="image-box">
+        <img src="{% static 'images/reciclaje.jpeg' %}" alt="Plataforma fácil">
+        <p>Plataforma fácil y rápida</p>
+    </div>
+    <div class="image-box">
+        <img src="{% static 'images/ambiente.webp' %}" alt="Cuidado del medio ambiente">
+        <p>Contribuye al medio ambiente</p>
+    </div>
+</div>
+
+<!-- Sección informativa -->
+<div class="description">
+    <p>
+        En <strong>EcoResiduos</strong> creemos que la sostenibilidad comienza en casa. Nuestra misión es facilitar el proceso de disposición responsable de residuos,
+        conectando a hogares y empresas con recolectores autorizados que cumplen con las normativas ambientales.
+    </p>
+    <p>
+        Nuestro sistema de cotización y solicitud de servicios te permite gestionar tus residuos desde la comodidad de tu hogar, con solo unos clics.
+        Juntos, podemos construir un futuro más limpio y verde.
+    </p>
+
+    <div class="image-section" style="margin-top: 20px;">
+        <div class="image-box">
+            <img src="{% static 'images/industrial.jpeg' %}" alt="Gestión industrial">
+            <p>Gestión industrial responsable</p>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <p>&copy; {{ now|date:"Y" }} EcoResiduos. Todos los derechos reservados.</p>
+    <p>
+        <a href="#">Política de privacidad</a> |
+        <a href="#">Términos y condiciones</a> |
+        <a href="#">Contacto</a>
+    </p>
+</footer>
 {% endblock %}

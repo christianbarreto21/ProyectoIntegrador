@@ -370,6 +370,8 @@ def agregar_informe_manejo_residuos(request):
             descripcion = form.cleaned_data['descripcion']
             archivo = form.cleaned_data['archivo_informe']
             
+            file_url = None
+            
             # Guardar archivo en el sistema de archivos
             if archivo:
                 fs = FileSystemStorage()

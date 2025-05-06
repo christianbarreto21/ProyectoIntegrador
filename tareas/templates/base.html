@@ -48,7 +48,7 @@ background: linear-gradient(90deg, #55a246,#70ca94,#a3f0d8);
 </head>
 <body>
     <header class="header">
-        <div class="logo"><strong>EcoResiduos</strong></div>
+        <a href="{% url 'home' %}" class="navbar-brand logo-text"><strong>EcoResiduos</strong></a>
         <nav>
             <a href="#">Productos</a>
             <a href="#">Contáctanos</a>
@@ -57,9 +57,10 @@ background: linear-gradient(90deg, #55a246,#70ca94,#a3f0d8);
             <a href="#"><i class="fa-brands fa-twitter"></i></a>
         </nav>
         <div class="buttons">
-            <a href="login" class="login">Iniciar sesión</a>
-            <a href="registro" class="register">Registrarse cliente</a>
-            <a href="registro" class="register">Registrarse empresa</a>
+            <a href="{% url 'login_usuario' %}" class="login">Iniciar sesión</a>
+<a href="{% url 'registro_usuario' %}?tipo=cliente" class="register">Registrarse cliente</a>
+<a href="{% url 'registro_usuario' %}?tipo=empresa" class="register">Registrarse empresa</a>
+
         </div>
     </header>
 

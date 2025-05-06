@@ -10,6 +10,8 @@ from django.db import models
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+from .managers import UsuarioManager
 
 class Rol(models.Model):
     nombre = models.CharField(max_length=100)
@@ -21,17 +23,20 @@ class Rol(models.Model):
     
     
 class Usuario(AbstractUser):
-
     username = None  # Eliminamos el campo username predeterminado
     nombre = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)  # Usamos el email como identificador único
+    email = models.EmailField(_('email address'), unique=True)
     telefono = models.CharField(max_length=20, blank=True, null=True)
     direccion = models.TextField(blank=True, null=True)
-    identificacion=models.TextField(max_length=10)
+    identificacion = models.CharField(max_length=10)
     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True, blank=True)
-    USERNAME_FIELD = 'email'  # Especificamos que el email será el identificador principal
-    REQUIRED_FIELDS = []  # Eliminamos username de los campos requeridos
-    
+
+    # Atributos de clase (¡fuera de los campos!)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['nombre']  # Puedes dejar vacío si no necesitas campos obligatorios extra
+
+    objects = UsuarioManager()
+        
     def __str__(self):
         return self.email
 
