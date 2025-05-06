@@ -146,6 +146,19 @@ class Carrito(models.Model):
      return self.precio_unitario * Decimal(str(self.cantidad_kg))
 
 class Factura(models.Model):
+
+    # Otros campos...
+    
+    PENDIENTE = 'pendiente'
+    EN_RECOLECCION = 'en_recoleccion'
+    RECOLECTADO = 'recolectado'
+
+    ESTADOS = [
+        (PENDIENTE, 'Pendiente'),
+        (EN_RECOLECCION, 'En recolección'),
+        (RECOLECTADO, 'Recolectado'),
+    ]
+    
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Quien cotiza
     creador_ubicacion = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cotizaciones_recibidas')
     fecha = models.DateTimeField(auto_now_add=True)

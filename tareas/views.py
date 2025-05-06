@@ -790,3 +790,23 @@ def ver_ruta(request, factura_id):
         'recoleccion': recoleccion,
         'coordenadas': recoleccion.coordenadas  # (lat, lng) o (None, None)
     })
+@login_required
+def marcar_recolectado(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id, creador_ubicacion=request.user)
+
+    if factura.estado != 'recolectado':
+        factura.estado = 'recolectado'
+        factura.save()
+
+        # Registrar residuos recolectados por categoría
+        for detalle in factura.detalles.all():
+            RegistroResiduo.objects.create(
+                categoria=detalle.categoria,
+                cantidad_kg=detalle.cantidad_kg
+            )
+
+        messages.success(request, "La recolección fue marcada como completada y los residuos fueron registrados.")
+    else:
+        messages.info(request, "Esta factura ya estaba marcada como recolectada.")
+
+    return redirect('cotizaciones_recibidas')

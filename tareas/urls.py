@@ -4,7 +4,7 @@ from django import views
 from django.urls import path
 
     
-from .views import  actualizar_ubicacion,agregar_empresa, agregar_informe_manejo_residuos, agregar_informe_normativas, añadir_al_carrito, buscar_por_categoria, cambiar_estado, carrito_vacio, cotizar_ubicacion,  crear_categoria, crear_ubicacion, direccion_recoleccion, editar_categoria, eliminar_categoria, eliminar_ubicacion, enviar_cotizacion, exportar_excel, exportar_pdf, historial_facturas,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, mapa_ubicaciones1, mapa_ubicaciones2, mis_ubicaciones, payment_view,  registrar_gestor, registrar_usuario, resumen_co2, ver_carrito, ver_cotizaciones_recibidas, ver_perfil, ver_ruta, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
+from .views import  actualizar_ubicacion,agregar_empresa, agregar_informe_manejo_residuos, agregar_informe_normativas, añadir_al_carrito, buscar_por_categoria, cambiar_estado, carrito_vacio, cotizar_ubicacion,  crear_categoria, crear_ubicacion, direccion_recoleccion, editar_categoria, eliminar_categoria, eliminar_ubicacion, enviar_cotizacion, exportar_excel, exportar_pdf, historial_facturas,  home,  crear_evento, create_checkout_session, editar_evento, editar_perfil, eliminar_evento, home1, home_view, lista_categorias, listar_eventos, login_usuario, logout_usuario,  mapa_ubicaciones, mapa_ubicaciones1, mapa_ubicaciones2, marcar_recolectado, mis_ubicaciones, payment_view,  registrar_gestor, registrar_usuario, resumen_co2, ver_carrito, ver_cotizaciones_recibidas, ver_perfil, ver_ruta, vista_clienteempresa, vista_clientenatural, vista_experto_ambiental, vista_gestor_residuos
 
 
 urlpatterns = [
@@ -54,6 +54,7 @@ urlpatterns = [
     path('recoleccion/<int:factura_id>/', direccion_recoleccion, name='direccion_recoleccion'),
     path('cotizaciones/<int:factura_id>/estado/<str:nuevo_estado>/', cambiar_estado, name='cambiar_estado'),
      path('cotizaciones/ruta/<int:factura_id>/', ver_ruta, name='ver_ruta'),
+    path('factura/<int:factura_id>/marcar_recolectado/', marcar_recolectado, name='marcar_recolectado'),
 
 
 
