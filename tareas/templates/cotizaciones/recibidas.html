@@ -1,0 +1,87 @@
+{% extends 'base3.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Cotizaciones Recibidas</h2>
+
+    {% if facturas %}
+        {% for factura in facturas %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}
+                    </div>  
+                    <div>
+                        <strong>Estado:</strong> {{ factura.get_estado_display }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Solicitante:</strong>
+                        {{ factura.usuario.get_full_name|default:factura.usuario.username }}
+                        ({{ factura.usuario.email }})
+                    </p>
+                    <p><strong>Total cotización:</strong> ${{ factura.total|floatformat:2 }}</p>
+
+                    <h6>Detalles:</h6>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Cantidad (kg)</th>
+                                <th>Precio Unitario</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in factura.detalles.all %}
+                                <tr>
+                                    <td>{{ detalle.categoria.nombre }}</td>
+                                    <td>{{ detalle.cantidad_kg }}</td>
+                                    <td>${{ detalle.precio_unitario|floatformat:2 }}</td>
+                                    <td>${{ detalle.precio_total|floatformat:2 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {# Dirección de recolección, si ya fue enviada #}
+                    {% if factura.recoleccion %}
+                        <div class="alert alert-info">
+                            <h6>Dirección de Recolección:</h6>
+                            <p><strong>Dirección:</strong> {{ factura.recoleccion.direccion }}</p>
+                            <p><strong>Ciudad:</strong> {{ factura.recoleccion.ciudad }}</p>
+                            {% if factura.recoleccion.observaciones %}
+                                <p><strong>Observaciones:</strong> {{ factura.recoleccion.observaciones }}</p>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'ver_ruta' factura.id %}" class="btn btn-info btn-sm ms-2">
+                            Ver ruta
+                          </a>
+                    {% else %}
+                        <p><em>Aún no se ha enviado la dirección de recolección.</em></p>
+                    {% endif %}
+
+                    {# Controles para cambiar el estado #}
+                    <div class="mt-3">
+                        {% if factura.estado == 'pendiente' %}
+                            <a href="{% url 'cambiar_estado' factura.id 'en_recoleccion' %}" class="btn btn-warning btn-sm">
+                                Marcar En Recolección
+                            </a>
+                            <a href="{% url 'cambiar_estado' factura.id 'recolectado' %}" class="btn btn-success btn-sm">
+                                Marcar Recolectado
+                            </a>
+                        {% elif factura.estado == 'en_recoleccion' %}
+                            <a href="{% url 'cambiar_estado' factura.id 'recolectado' %}" class="btn btn-success btn-sm">
+                                Marcar Recolectado
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No has recibido cotizaciones aún.</p>
+    {% endif %}
+</div>
+{% endblock %}

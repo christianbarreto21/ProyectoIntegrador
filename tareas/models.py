@@ -7,7 +7,8 @@ from django.utils import timezone
 # Modelo para Profesores
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
+from urllib.parse import quote
+import requests
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -145,13 +146,28 @@ class Carrito(models.Model):
      return self.precio_unitario * Decimal(str(self.cantidad_kg))
 
 class Factura(models.Model):
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    # Otros campos...
+    
+    PENDIENTE = 'pendiente'
+    EN_RECOLECCION = 'en_recoleccion'
+    RECOLECTADO = 'recolectado'
+
+    ESTADOS = [
+        (PENDIENTE, 'Pendiente'),
+        (EN_RECOLECCION, 'En recolección'),
+        (RECOLECTADO, 'Recolectado'),
+    ]
+    
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Quien cotiza
+    creador_ubicacion = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cotizaciones_recibidas')
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"Factura #{self.id} - {self.usuario.username} - {self.fecha.date()}"
-
+    estado = models.CharField(
+        max_length=20,
+        choices=[('pendiente', 'Pendiente'), ('en_recoleccion', 'En Recolección'), ('recolectado', 'Recolectado')],
+        default='pendiente'
+    )
 
 class DetalleFactura(models.Model):
     factura = models.ForeignKey(Factura, related_name='detalles', on_delete=models.CASCADE)
@@ -174,3 +190,102 @@ class Empresa(models.Model):
     def __str__(self):
         return self.nombre
 
+class Recoleccion(models.Model):
+    factura = models.OneToOneField(
+        Factura, 
+        on_delete=models.CASCADE, 
+        related_name='recoleccion',
+        verbose_name="Factura asociada"
+    )
+    direccion = models.CharField(
+        max_length=255,
+        verbose_name="Dirección",
+        help_text="Calle y número, ej: Calle 100 #15-20"
+    )
+    ciudad = models.CharField(
+        max_length=100,
+        verbose_name="Ciudad/Municipio",
+        help_text="Ciudad o municipio de recolección"
+    )
+    barrio = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Barrio/Localidad",
+        help_text="Barrio o localidad (opcional)"
+    )
+    referencia = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Punto de referencia",
+        help_text="Cerca a... o entre... (opcional)"
+    )
+    observaciones = models.TextField(
+        blank=True,
+        verbose_name="Observaciones adicionales"
+    )
+    fecha_solicitud = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de solicitud"
+    )
+
+    class Meta:
+        verbose_name = "Recolección"
+        verbose_name_plural = "Recolecciones"
+        ordering = ['-fecha_solicitud']
+
+    def __str__(self):
+        return f"Recolección #{self.factura_id} - {self.direccion_completa()}"
+
+    def direccion_completa(self):
+        """Devuelve la dirección completa formateada"""
+        partes = [
+            self.direccion,
+            self.barrio,
+            self.ciudad,
+            self.referencia
+        ]
+        return ", ".join(filter(None, partes))
+
+    def geocodificar(self):
+        """
+        Obtiene las coordenadas (lat, lng) usando Nominatim
+        Devuelve (latitud, longitud) o (None, None) si falla
+        """
+        direccion = quote(self.direccion_completa())
+        url = f"https://nominatim.openstreetmap.org/search?format=json&q={direccion}"
+        
+        try:
+            response = requests.get(url, headers={
+                'User-Agent': settings.APP_NAME  # Requerido por Nominatim
+            })
+            data = response.json()
+            
+            if data and len(data) > 0:
+                return float(data[0]['lat']), float(data[0]['lon'])
+        except Exception as e:
+            print(f"Error en geocodificación: {e}")
+        
+        return None, None
+
+    def obtener_mapa_embed_url(self, zoom=15):
+        """
+        Genera URL para iframe de OpenStreetMap
+        Ejemplo de uso en templates:
+        <iframe src="{{ recoleccion.obtener_mapa_embed_url }}" width="600" height="450"></iframe>
+        """
+        lat, lng = self.geocodificar()
+        if lat and lng:
+            return f"https://www.openstreetmap.org/export/embed.html?bbox={lng-0.01}%2C{lat-0.01}%2C{lng+0.01}%2C{lat+0.01}&layer=mapnik&marker={lat}%2C{lng}"
+        return None
+
+    @property
+    def coordenadas(self):
+        """Propiedad para acceder fácilmente a las coordenadas"""
+        return self.geocodificar()
+
+    def save(self, *args, **kwargs):
+        # Aquí podrías agregar lógica para geocodificar automáticamente al guardar
+        # si quisieras almacenar las coordenadas en la base de datos
+        super().save(*args, **kwargs)

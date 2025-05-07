@@ -11,6 +11,7 @@
                     <h5>Factura #{{ factura.id }}</h5>
                     <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}</p>
                     <p><strong>Total:</strong> ${{ factura.total }}</p>
+                    <p><strong>Estado:</strong> {{ factura.estado|title }}</p>  {# Línea añadida para mostrar el estado #}
 
                     <h6>Detalles:</h6>
                     <ul>
@@ -30,3 +31,4 @@
     <a href="{% url 'ver_carrito' %}" class="btn btn-primary mt-3">Volver al Carrito</a>
 </div>
 {% endblock %}
+

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prefactura</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #f0f0f0; }
+        .total { font-weight: bold; font-size: 18px; text-align: right; margin-top: 20px; }
+        .estado { font-size: 16px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Prefactura para la ubicación: {{ factura.detalles.first.categoria.ubicacioncategoria.ubicacion.nombre }}</h1>
+
+    <p class="estado">Estado: <strong>{{ factura.estado|title }}</strong></p>
+    <p>Fecha: {{ factura.fecha|date:"d/m/Y H:i" }}</p>
+    <p>Solicitante: {{ factura.usuario.get_full_name }} ({{ factura.usuario.username }})</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Cantidad (kg)</th>
+                <th>Precio Unitario</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in factura.detalles.all %}
+                <tr>
+                    <td>{{ detalle.categoria.nombre }}</td>
+                    <td>{{ detalle.cantidad_kg }}</td>
+                    <td>${{ detalle.precio_unitario }}</td>
+                    <td>${{ detalle.precio_total }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p class="total">Total de la cotización: ${{ factura.total }}</p>
+</body>
+</html>

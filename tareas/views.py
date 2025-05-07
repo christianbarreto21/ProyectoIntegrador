@@ -6,7 +6,7 @@ from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from .models import Carrito, Factura, DetalleFactura, RegistroResiduo, Rol
+from .models import Carrito, Factura, DetalleFactura, Recoleccion, RegistroResiduo, Rol
 from django.db.models import Sum, F, FloatField, ExpressionWrapper
 from io import BytesIO
 from django.template.loader import render_to_string
@@ -32,7 +32,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Evento
-from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm, RegistroGestorForm,  RegistroUsuarioForm, UbicacionCategoriaFormSet
+from .forms import CategoriaResiduoForm, CotizacionDomicilioForm, EmpresaForm, EventoForm, InformeManejoResiduosForm, InformeNormativasForm, RecoleccionForm, RegistroGestorForm,  RegistroUsuarioForm, UbicacionCategoriaFormSet
 from django.contrib.auth import authenticate, login
 from .forms import UbicacionForm
 from django.core.files.storage import FileSystemStorage
@@ -334,7 +334,7 @@ def buscar_por_categoria(request):
 def cotizar_ubicacion(request, ubicacion_id):
     ubicacion = get_object_or_404(Ubicacion, id=ubicacion_id)
     categorias_disponibles = UbicacionCategoria.objects.filter(ubicacion=ubicacion)
-
+ 
     if request.method == 'POST':
         for ubicacion_categoria in categorias_disponibles:
             cantidad_str = request.POST.get(f'cantidad_{ubicacion_categoria.categoria.id}')
@@ -566,17 +566,24 @@ def agregar_empresa(request):
         form = EmpresaForm()
     return render(request, 'templates/agregar_empresa.html', {'form': form})
 
-def realizar_pago(request):
+@login_required
+def enviar_cotizacion(request):
     carrito_items = Carrito.objects.filter(usuario=request.user)
-
     if not carrito_items:
         return redirect('carrito_vacio')
 
     total_compra = sum(item.precio_total for item in carrito_items)
 
+    # Obtener la ubicación y su creador desde el primer ítem
+    ubicacion = carrito_items.first().ubicacion_categoria.ubicacion
+    creador_ubicacion = ubicacion.usuario
+
+    # Crear la factura con estado pendiente
     factura = Factura.objects.create(
         usuario=request.user,
-        total=total_compra
+        creador_ubicacion=creador_ubicacion,
+        total=total_compra,
+        estado='pendiente'
     )
 
     for item in carrito_items:
@@ -588,24 +595,45 @@ def realizar_pago(request):
             precio_total=item.precio_total
         )
 
-        RegistroResiduo.objects.create(
-            categoria=item.categoria,
-            cantidad_kg=item.cantidad_kg
-        )
-
     carrito_items.delete()
 
-    co2_acumulado = RegistroResiduo.objects.annotate(
-        co2=ExpressionWrapper(
-            F('cantidad_kg') * F('categoria__factor_co2'),
-            output_field=FloatField()
-        )
-    ).aggregate(total_co2=Sum('co2'))['total_co2'] or 0
+    messages.success(request, f"Se envió la cotización al dueño de la ubicación: {creador_ubicacion.username}")
+    return redirect('direccion_recoleccion', factura_id=factura.id)
 
-    # Puedes mostrar un mensaje de éxito si usas el sistema de mensajes
-    messages.success(request, f"Pago realizado exitosamente. Has evitado {co2_acumulado:.2f} kg de CO₂ en total.")
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Factura, Recoleccion
+from .forms import RecoleccionForm
 
-    return redirect('mapa_ubicaciones1')
+@login_required
+def direccion_recoleccion(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id, usuario=request.user)
+
+    # Evita que se registre más de una recolección para una misma factura
+    if hasattr(factura, 'recoleccion'):
+        messages.warning(request, "Ya has registrado una dirección de recolección para esta factura.")
+        return redirect('mapa_ubicaciones')  # O alguna otra vista relevante
+
+    if request.method == 'POST':
+        form = RecoleccionForm(request.POST)
+        if form.is_valid():
+            recoleccion = form.save(commit=False)
+            recoleccion.factura = factura
+            recoleccion.save()
+
+            messages.success(request, "La dirección fue registrada. El recolector ha sido notificado.")
+            return redirect('mapa_ubicaciones')
+        else:
+            messages.error(request, "Por favor corrige los errores en el formulario.")
+    else:
+        form = RecoleccionForm()
+
+    return render(request, 'direccion_form.html', {
+        'form': form,
+        'factura': factura
+    })
+
 
 def generar_pdf(factura, co2_acumulado):
     # Renderizar el HTML para la factura
@@ -733,3 +761,52 @@ def buscar_por_categoria(request):
         'form': form,
         'ubicaciones': ubicaciones
     })
+@login_required
+def ver_prefactura(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id, creador_ubicacion=request.user)
+    return render(request, 'cotizaciones/prefactura.html', {'factura': factura})
+@login_required
+def ver_cotizaciones_recibidas(request):
+    facturas = Factura.objects.filter(creador_ubicacion=request.user).prefetch_related('detalles', 'detalles__categoria').order_by('-fecha')
+    return render(request, 'cotizaciones/recibidas.html', {'facturas': facturas})
+@login_required
+def cambiar_estado(request, factura_id, nuevo_estado):
+    factura = get_object_or_404(Factura, id=factura_id)
+    # Estados válidos definidos en el modelo
+    estados_validos = [choice[0] for choice in Factura.ESTADOS]
+
+    if nuevo_estado not in estados_validos:
+        messages.error(request, "Estado no válido.")
+    else:
+        factura.estado = nuevo_estado
+        factura.save()
+        messages.success(request, f"Estado actualizado a «{factura.get_estado_display()}».")
+
+    return redirect('ver_cotizaciones_recibidas')
+
+def ver_ruta(request, factura_id):
+    recoleccion = get_object_or_404(Recoleccion, factura_id=factura_id)
+    return render(request, 'cotizaciones/ver_ruta.html', {
+        'recoleccion': recoleccion,
+        'coordenadas': recoleccion.coordenadas  # (lat, lng) o (None, None)
+    })
+@login_required
+def marcar_recolectado(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id, creador_ubicacion=request.user)
+
+    if factura.estado != 'recolectado':
+        factura.estado = 'recolectado'
+        factura.save()
+
+        # Registrar residuos recolectados por categoría
+        for detalle in factura.detalles.all():
+            RegistroResiduo.objects.create(
+                categoria=detalle.categoria,
+                cantidad_kg=detalle.cantidad_kg
+            )
+
+        messages.success(request, "La recolección fue marcada como completada y los residuos fueron registrados.")
+    else:
+        messages.info(request, "Esta factura ya estaba marcada como recolectada.")
+
+    return redirect('cotizaciones_recibidas')

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'tareas'
 ]
 
@@ -129,3 +130,8 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Nombre de tu aplicación para Nominatim
+APP_NAME = "tareas/1.0 (contacto@miempresa.com)"
+
+# Tiempo de espera para geocodificación
+GEOCODING_TIMEOUT = 10
