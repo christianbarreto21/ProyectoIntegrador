@@ -619,7 +619,7 @@ def direccion_recoleccion(request, factura_id):
     # Evita que se registre más de una recolección para una misma factura
     if hasattr(factura, 'recoleccion'):
         messages.warning(request, "Ya has registrado una dirección de recolección para esta factura.")
-        return redirect('mapa_ubicaciones')  # O alguna otra vista relevante
+        return redirect('mapa_ubicaciones2')  # O alguna otra vista relevante
 
     if request.method == 'POST':
         form = RecoleccionForm(request.POST)
@@ -629,7 +629,7 @@ def direccion_recoleccion(request, factura_id):
             recoleccion.save()
 
             messages.success(request, "La dirección fue registrada. El recolector ha sido notificado.")
-            return redirect('mapa_ubicaciones')
+            return redirect('mapa_ubicaciones2')
         else:
             messages.error(request, "Por favor corrige los errores en el formulario.")
     else:
