@@ -39,6 +39,12 @@ from django.core.files.storage import FileSystemStorage
 from xhtml2pdf import pisa
 import openpyxl
 from openpyxl.chart import PieChart, Reference
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import Ubicacion, UbicacionCategoria, CategoriaResiduo, Carrito, RegistroResiduo, Rol, Usuario, Empresa, Evento, Recoleccion, Factura, DetalleFactura
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 def home1(request):
     return render(request, 'home.html')
 
@@ -769,10 +775,25 @@ def ver_prefactura(request, factura_id):
 def ver_cotizaciones_recibidas(request):
     facturas = Factura.objects.filter(creador_ubicacion=request.user).prefetch_related('detalles', 'detalles__categoria').order_by('-fecha')
     return render(request, 'cotizaciones/recibidas.html', {'facturas': facturas})
+
+#@login_required
+#def cambiar_estado(request, factura_id, nuevo_estado):
+#    factura = get_object_or_404(Factura, id=factura_id)
+    # Estados válidos definidos en el modelo
+ #   estados_validos = [choice[0] for choice in Factura.ESTADOS]
+
+  #  if nuevo_estado not in estados_validos:
+   #     messages.error(request, "Estado no válido.")
+    #else:
+     #   factura.estado = nuevo_estado
+      #  factura.save()
+       # messages.success(request, f"Estado actualizado a «{factura.get_estado_display()}».")
+
+    #return redirect('ver_cotizaciones_recibidas')
+
 @login_required
 def cambiar_estado(request, factura_id, nuevo_estado):
     factura = get_object_or_404(Factura, id=factura_id)
-    # Estados válidos definidos en el modelo
     estados_validos = [choice[0] for choice in Factura.ESTADOS]
 
     if nuevo_estado not in estados_validos:
@@ -781,6 +802,27 @@ def cambiar_estado(request, factura_id, nuevo_estado):
         factura.estado = nuevo_estado
         factura.save()
         messages.success(request, f"Estado actualizado a «{factura.get_estado_display()}».")
+
+        # Enviar correo si el estado es "recolectado"
+        if nuevo_estado == 'recolectado':
+            cliente = factura.usuario
+
+            # Renderizar plantilla HTML del correo
+            subject = '✅ Recolección Completada - Ecoresiduos'
+            from_email = settings.DEFAULT_FROM_EMAIL
+            to = [cliente.email]
+
+            context = {
+                'nombre': cliente.get_full_name() or cliente.username,
+                'factura': factura,
+            }
+
+            text_content = f'Hola, tu recolección ha sido completada.'
+            html_content = render_to_string('emails/recoleccion_completada.html', context)
+
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
 
     return redirect('ver_cotizaciones_recibidas')
 
@@ -791,22 +833,39 @@ def ver_ruta(request, factura_id):
         'coordenadas': recoleccion.coordenadas  # (lat, lng) o (None, None)
     })
 @login_required
-def marcar_recolectado(request, factura_id):
-    factura = get_object_or_404(Factura, id=factura_id, creador_ubicacion=request.user)
-
-    if factura.estado != 'recolectado':
-        factura.estado = 'recolectado'
-        factura.save()
-
+#def marcar_recolectado(request, factura_id):
+ #   factura = get_object_or_404(Factura, id=factura_id, creador_ubicacion=request.user)
+#
+ #   if factura.estado != 'recolectado':
+  #      factura.estado = 'recolectado'
+   #     factura.save()
+#
         # Registrar residuos recolectados por categoría
-        for detalle in factura.detalles.all():
-            RegistroResiduo.objects.create(
-                categoria=detalle.categoria,
-                cantidad_kg=detalle.cantidad_kg
-            )
+ #       for detalle in factura.detalles.all():
+  #         RegistroResiduo.objects.create(
+   #             categoria=detalle.categoria,
+    #            cantidad_kg=detalle.cantidad_kg
+  #          )
+#
+ #       messages.success(request, "La recolección fue marcada como completada y los residuos fueron registrados.")
+   # else:
+   #     messages.info(request, "Esta factura ya estaba marcada como recolectada.")
 
-        messages.success(request, "La recolección fue marcada como completada y los residuos fueron registrados.")
-    else:
-        messages.info(request, "Esta factura ya estaba marcada como recolectada.")
+    #return redirect('cotizaciones_recibidas')
 
-    return redirect('cotizaciones_recibidas')
+@login_required
+def marcar_recolectado(request, factura_id):
+    factura = get_object_or_404(Factura, id=factura_id)
+    factura.estado = 'en_recoleccion'
+    factura.save()
+    
+    cliente = factura.usuario
+    send_mail(
+        'Recolección Completada',
+        f'Hola {cliente.username},\n\nLa recolección de residuos ha sido programada.',
+        settings.DEFAULT_FROM_EMAIL,
+        [cliente.email],
+        fail_silently=False,
+    )
+    
+    return redirect('ver_cotizaciones_recibidas')

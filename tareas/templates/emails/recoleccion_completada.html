@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .container {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            background-color: #f9f9f9;
+        }
+        .header {
+            color: #2e7d32;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="header">¡Hola !</p>
+
+        <p>Nos alegra informarte que la recolección de residuos asociada a tu cotización ha sido <strong>completada exitosamente</strong>.</p>
+
+        <p><strong>Fecha:</strong> {{ factura.fecha|date:"d/m/Y H:i" }}<br>
+           <strong>Total:</strong> ${{ factura.total|floatformat:2 }}</p>
+
+        <p>Gracias por contribuir a un mundo más sostenible 🌍.</p>
+
+        <p class="footer">Este correo ha sido enviado automáticamente por el sistema Ecoresiduos.</p>
+    </div>
+</body>
+</html>
